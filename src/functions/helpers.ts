@@ -2,8 +2,8 @@ export const formatSetToString = (s: string): string => {
   return '{' + s.slice(1, -1).replace(/"/g, '') + '}'
 }
 
-export const toMidiNote = (s: string): string => {
-  return (parseInt(s) + 60).toString()
+export const toMidiNote = (s: string, octave: number): string => {
+  return (parseInt(s) + 12 * octave).toString()
 }
 
 export const toFormattedPrimeFormArray = (s: string): string[] => {
