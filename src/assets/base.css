@@ -4,6 +4,9 @@
   --offblack: #303030;
   --gold: #ffd700;
   --dark-goldenrod: #b8860b;
+  --light-hover: #aaa;
+  --dark-hover: #888;
+  --active: #2196f3;
 }
 
 /* semantic color variables for this project */
@@ -13,6 +16,13 @@
   --color-highlight: var(--gold);
   --color-dark-highlight: var(--dark-goldenrod);
   --color-text: var(--black);
+  --color-hover: var(--light-hover);
+  --color-active: var(--active);
+}
+
+/* slider sizes */
+:root {
+  --knobsize: 18px;
 }
 
 [data-theme='dark'] {
@@ -21,6 +31,8 @@
   --color-highlight: var(--gold);
   --color-dark-highlight: var(--dark-goldenrod);
   --color-text: var(--offwhite);
+  --color-hover: var(--dark-hover);
+  --color-active: var(--active);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -30,6 +42,8 @@
     --color-highlight: var(--gold);
     --color-dark-highlight: var(--dark-goldenrod);
     --color-text: var(--offwhite);
+    --color-hover: var(--dark-hover);
+    --color-active: var(--active);
   }
 }
 
@@ -76,6 +90,67 @@
 
 .active {
   z-index: 999 !important;
+}
+
+/* slider container */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: calc(var(--knobsize) * 2.3);
+  height: calc(var(--knobsize) * 1.3);
+}
+
+/* hide default checkbox styling */
+.switch input {
+  width: 0;
+  height: 0;
+  opacity: 0;
+}
+
+/* slider background */
+.switch .slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: 0.4s;
+  transition: 0.4s;
+  border-radius: calc(var(--knobsize) * 1.3);
+}
+
+/* slider knob */
+.slider:before {
+  position: absolute;
+  content: '';
+  height: calc(var(--knobsize));
+  width: calc(var(--knobsize));
+  left: calc(var(--knobsize) / 6.5);
+  bottom: calc(var(--knobsize) / 6.5);
+  background-color: white;
+  -webkit-transition: 0.4s;
+  transition: 0.4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: var(--color-active);
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(calc(var(--knobsize)));
+  -ms-transform: translateX(calc(var(--knobsize)));
+  transform: translateX(calc(var(--knobsize)));
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px var(--color-active);
+}
+
+.active-color {
+  background-color: var(--color-active) !important;
 }
 
 *,
