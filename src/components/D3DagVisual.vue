@@ -2,8 +2,8 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { formatSetToString, toFormattedPrimeFormArray, toMidiNote } from '@/functions/helpers'
 import VerticalPanel from './VerticalPanel.vue'
-import LightDarkModeButton from './LightDarkModeButton.vue'
 import HorizontalPanel from './HorizontalPanel.vue'
+import GraphPanel from './GraphPanel.vue'
 import * as d3 from 'd3'
 import {
   coordSimplex,
@@ -30,9 +30,14 @@ const NODE_RADIUS = 50
 const ARROW_SIZE = (NODE_RADIUS * NODE_RADIUS) / 30.0
 const ARROW_LEN = Math.sqrt((4 * ARROW_SIZE) / Math.sqrt(3))
 
+const MIN_SCALE = 0.1
+const MAX_SCALE = 30
+
 const abortController = new AbortController()
 const links = ref<null | Link[]>(null)
 const svgRef = ref<null | SVGElement>(null)
+const graphSize = ref<{ width: number; height: number }>({ width: 0, height: 0 })
+const zoomRef = ref<number>(0.1)
 const isVerticalPanelOpen = ref<boolean>(false)
 const focusPanel = ref<string>('horizontal')
 
@@ -63,13 +68,17 @@ const fetchData = async () => {
   }
 }
 
-const linkBuilder = (data: string[]) => {
+const linkBuilder = (data: string[], condition: boolean = true) => {
   const newData: string[][] = data.map((s) => s.slice(1, -1).split(','))
   let links: Link[] = [{ source: '[""]', target: '["0"]' }]
 
   for (const s of newData) {
     for (const t of newData) {
-      if (s.every((e) => t.includes(e)) && s.length === t.length - 1) {
+      if (
+        s.every((e) => t.includes(e)) &&
+        s.length === t.length - 1 &&
+        (condition ? t > s : true)
+      ) {
         links.push({ source: '[' + s.toString() + ']', target: '[' + t.toString() + ']' })
       }
     }
@@ -156,7 +165,7 @@ const dagBuilder = () => {
     .targetId(({ target }: { target: string }) => target)
   const dag = builder(links.value)
 
-  const zoom = d3.zoom<SVGElement, unknown>().scaleExtent([0.15, 32]).on('zoom', zoomed)
+  const zoom = d3.zoom<SVGElement, unknown>().scaleExtent([MIN_SCALE, MAX_SCALE]).on('zoom', zoomed)
   const layout = sugiyama()
     .layering(layeringSimplex())
     .decross(decrossTwoLayer().order(twolayerGreedy().base(twolayerAgg())))
@@ -164,21 +173,15 @@ const dagBuilder = () => {
     .nodeSize([2 * NODE_RADIUS, 2 * NODE_RADIUS])
     .gap([NODE_RADIUS, NODE_RADIUS])
     .tweaks([tweakShape([2 * NODE_RADIUS, 2 * NODE_RADIUS], shapeEllipse)])
-  layout(dag as any)
+  const { width, height } = layout(dag as any)
+  graphSize.value.width = width
+  graphSize.value.height = height
 
   const svg = d3
     .select(svgRef.value)
     .attr('width', window.innerWidth)
     .attr('height', window.innerHeight)
   const mainGroup = svg.append('g')
-  // const defs = svg.append('defs')
-  // // Initialize color map
-  // const steps = dag.nnodes()
-  // const interp = d3.interpolateRainbow
-  // const colorMap: { [key: string]: string } = {}
-  // for (const [i, node] of [...dag.nodes()].entries()) {
-  //   colorMap[node.data] = interp(i / steps)
-  // }
 
   // add lines
   const line = d3.line().curve(d3.curveMonotoneY)
@@ -190,21 +193,6 @@ const dagBuilder = () => {
     .append('path')
     .attr('d', ({ points }) => line(points))
     .classed('line', true)
-  // .attr('stroke', ({ source, target }) => {
-  //   // encodeURIComponents for spaces, hope id doesn't have a `--` in it
-  //   const gradId = encodeURIComponent(`${source.data}--${target.data}`).replace(/[^\w-]/g, '_')
-  //   const grad = defs
-  //     .append('linearGradient')
-  //     .attr('id', gradId)
-  //     .attr('gradientUnits', 'userSpaceOnUse')
-  //     .attr('x1', source.x)
-  //     .attr('x2', target.x)
-  //     .attr('y1', source.y)
-  //     .attr('y2', target.y)
-  //   grad.append('stop').attr('offset', '0%').attr('stop-color', colorMap[source.data])
-  //   grad.append('stop').attr('offset', '100%').attr('stop-color', colorMap[target.data])
-  //   return `url(#${gradId})`
-  // })
 
   // select nodes
   const nodes = mainGroup
@@ -233,7 +221,6 @@ const dagBuilder = () => {
 
   // plot node circles
   nodes.append('circle').attr('r', NODE_RADIUS).classed('node', true)
-  // .attr('fill', (n) => colorMap[n.data])
 
   // add arrows
   const arrow = d3.symbol().type(d3.symbolTriangle).size(ARROW_SIZE)
@@ -252,7 +239,6 @@ const dagBuilder = () => {
       const angle = (Math.atan2(-dy, -dx) * 180) / Math.PI + 90
       return `translate(${ex}, ${ey}) rotate(${angle})`
     })
-    // .attr('fill', ({ target }) => colorMap[target.data])
     .attr('stroke-dasharray', `${ARROW_LEN},${ARROW_LEN}`)
     .classed('arrow', true)
 
@@ -262,17 +248,56 @@ const dagBuilder = () => {
     .text((d) => formatSetToString(d.data))
     .classed('text', true)
 
-  svg.call(zoom).call(zoom.transform, d3.zoomIdentity)
+  // calculate the center
+  const { centerX, centerY } = calcCenter(MIN_SCALE)
 
-  function zoomed({ transform }: { transform: any }) {
-    mainGroup.attr('transform', transform)
+  svg
+    .call(zoom)
+    .call(zoom.transform, d3.zoomIdentity.translate(-centerX, -centerY).scale(MIN_SCALE))
+}
+
+const calcCenter = (scale: number) => {
+  const centerScreenX = window.innerWidth / 2
+  const centerScreenY = window.innerHeight / 2
+  const centerSvgX = graphSize.value.width / 2
+  const centerSvgY = graphSize.value.height / 2
+
+  return {
+    centerX: centerSvgX * scale - centerScreenX,
+    centerY: centerSvgY * scale - centerScreenY
   }
+}
+
+const zoomed = ({ transform }: { transform: any }) => {
+  const mainGroup = d3.select(svgRef.value).select('g')
+  mainGroup.attr('transform', transform)
+  zoomRef.value = transform.k
+}
+
+const changeZoom = (newScale: number) => {
+  if (!svgRef.value) return
+  const svg = d3.select(svgRef.value)
+
+  newScale = newScale / 100
+  if (!newScale || newScale < MIN_SCALE) {
+    newScale = MIN_SCALE
+  }
+  if (newScale > MAX_SCALE) {
+    newScale = MAX_SCALE
+  }
+
+  const { centerX, centerY } = calcCenter(newScale)
+
+  const zoom = d3.zoom<SVGElement, unknown>().scaleExtent([MIN_SCALE, MAX_SCALE]).on('zoom', zoomed)
+  svg.call(zoom).call(zoom.transform, d3.zoomIdentity.translate(-centerX, -centerY).scale(newScale))
 }
 
 const playAudio = () => {
   if (!selectedSets.value.length) return
 
   const notes: string[] = toFormattedPrimeFormArray(selectedSets.value[0])
+
+  if (notes[0] === '') return // cannot play empty set
 
   const clearCurrentQueue = () => {
     currNoteQueue.value.forEach((midiNote) => synth.noteOff(0, midiNote))
@@ -287,7 +312,7 @@ const playAudio = () => {
   let i = 0
 
   const playNextNote = () => {
-    const midiNote = toMidiNote(notes[i])
+    const midiNote = toMidiNote(notes[i], 5)
     synth.noteOn(0, midiNote, 60)
     currNoteQueue.value.push(midiNote)
     i++
@@ -310,7 +335,7 @@ const playAudio = () => {
   )
 }
 
-const updateDimensions = () => {
+const updateDimensionsHandler = () => {
   d3.select(svgRef.value).attr('width', window.innerWidth).attr('height', window.innerHeight)
 }
 
@@ -323,7 +348,7 @@ onMounted(async () => {
     await fetchData()
   }
   dagBuilder()
-  window.addEventListener('resize', updateDimensions)
+  window.addEventListener('resize', updateDimensionsHandler)
 })
 
 onUnmounted(() => {
@@ -331,12 +356,12 @@ onUnmounted(() => {
   for (const id of intervalIds.value) {
     clearInterval(id)
   }
-  window.removeEventListener('resize', updateDimensions)
+  window.removeEventListener('resize', updateDimensionsHandler)
 })
 </script>
 
 <template>
-  <LightDarkModeButton></LightDarkModeButton>
+  <GraphPanel :zoomRef="zoomRef" @changeZoom="changeZoom"></GraphPanel>
   <svg ref="svgRef"></svg>
   <HorizontalPanel
     :class="{ active: focusPanel === 'horizontal' }"
