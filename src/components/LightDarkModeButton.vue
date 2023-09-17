@@ -1,28 +1,27 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-const lightMode = ref<boolean>(localStorage.getItem('theme') === 'light' ? true : false)
+const darkMode = ref<boolean>(localStorage.getItem('theme') === 'dark' ? true : false)
 
-watch(lightMode, () => {
-  const theme = lightMode.value ? 'light' : 'dark'
+watch(darkMode, () => {
+  const theme = darkMode.value ? 'dark' : 'light'
   document.body.setAttribute('data-theme', theme)
   localStorage.setItem('theme', theme)
 })
 </script>
 
 <template>
-  <button class="btn" type="button" @click="lightMode = !lightMode">
-    <font-awesome-icon icon="sun" v-if="lightMode" /><font-awesome-icon
-      icon="moon"
-      v-else
-      style="color: var(--color-text)"
-    />
-  </button>
+  <div class="toggle-container">
+    Dark Mode
+    <label class="switch" for="darkModeButton">
+      <input
+        id="darkModeButton"
+        type="checkbox"
+        @click="darkMode = !darkMode"
+        :checked="darkMode"
+      />
+      <span class="slider"></span>
+    </label>
+  </div>
 </template>
 
-<style>
-.btn {
-  position: absolute;
-  background: transparent;
-  background-color: transparent;
-}
-</style>
+<style></style>
