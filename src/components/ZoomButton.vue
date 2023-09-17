@@ -7,7 +7,7 @@ const props = defineProps<{
 
 const ZOOM_CONSTANT = 23
 
-const $emit = defineEmits(['changeZoom'])
+const $emit = defineEmits(['changeZoom', 'focusedOnText', 'blurredOnText'])
 
 // gives the scale as a string percentage
 const zoomScale = () => {
@@ -21,13 +21,18 @@ const zoomFormat = () => {
 
 const zoomText = ref<string>(zoomScale())
 
+const handleFocus = () => {
+  zoomText.value = zoomText.value.slice(0, -1)
+  $emit('focusedOnText')
+}
+
 // add percent sign back if needed and run changeZoom
 const handleBlur = () => {
-  console.log(zoomText.value)
   if (zoomText.value.charAt(zoomText.value.length - 1) !== '%') {
     zoomText.value = zoomText.value + '%'
   }
   $emit('changeZoom', zoomFormat())
+  $emit('blurredOnText')
 }
 
 // changeZoom upon enter and set zoomText
@@ -58,7 +63,7 @@ watch(
       class="zoom-input"
       type="text"
       v-model.trim="zoomText"
-      @focus="zoomText = zoomText.slice(0, -1)"
+      @focus="handleFocus()"
       @blur="handleBlur()"
       v-on:keydown.enter="handleEnter()"
     />

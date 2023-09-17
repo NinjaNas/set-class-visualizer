@@ -9,6 +9,7 @@ Kbd(JZZ)
 
 const props = defineProps<{
   selectedSets: string[]
+  textFieldFocused: boolean
 }>()
 
 const synth = JZZ.synth.Tiny()
@@ -91,13 +92,37 @@ const setAscii = () => {
   ascii.value = JZZ.input.ASCII(keys)
 }
 
-const changeFilter = (noteArr: string[]) => {
+const enableKeypress = () => {
+  ascii.value.disconnect(filter.value)
+  filter.value.disconnect(piano.value)
+  setAscii()
+  filter.value = JZZ.Widget()
+  ascii.value.connect(filter.value)
+  filter.value.connect(piano.value)
+  if (props.selectedSets.length) {
+    const notes: string[] = toFormattedPrimeFormArray(props.selectedSets[0]).map((n) =>
+      toMidiNote(n, currOctave.value)
+    )
+    changeFilter(notes)
+  }
+}
+
+const disableKeypress = () => {
+  ascii.value.disconnect(filter.value)
+  filter.value.disconnect(piano.value)
+  ascii.value = JZZ.input.ASCII()
+  filter.value = JZZ.Widget()
+  ascii.value.connect(filter.value)
+  filter.value.connect(piano.value)
+}
+
+const changeFilter = (midiNoteArr: string[]) => {
   ascii.value.disconnect(filter.value)
   filter.value.disconnect(piano.value)
   filter.value = JZZ.Widget({
     _receive: function (msg: any) {
       // emit if note in array
-      if (noteArr.includes(msg[1].toString())) {
+      if (midiNoteArr.includes(msg[1].toString())) {
         this.emit(msg)
       }
     }
@@ -124,12 +149,10 @@ const changeOctave = (octave: number) => {
 }
 
 const limitNotes = () => {
-  // refactor later when you have the complement data
-  const { selectedSets } = props
-  if (!selectedSets.length) return
+  if (!props.selectedSets.length) return
 
   const fullset: string[] = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11']
-  const notes: string[] = toFormattedPrimeFormArray(selectedSets[0]).map((n) =>
+  const notes: string[] = toFormattedPrimeFormArray(props.selectedSets[0]).map((n) =>
     toMidiNote(n, currOctave.value)
   )
   const complement: string[] = fullset
@@ -174,6 +197,7 @@ const limitNotes = () => {
 }
 
 const keydownHandler = (e: KeyboardEvent) => {
+  if (props.textFieldFocused) return // if a textField is focused disable custom keyboard events
   const keyToOctaveMap: { [key: string]: number } = {
     '1': 0,
     '2': 1,
@@ -220,6 +244,11 @@ onMounted(() => {
   watch(
     () => props.selectedSets,
     () => limitNotes()
+  )
+
+  watch(
+    () => props.textFieldFocused,
+    () => (props.textFieldFocused ? disableKeypress() : enableKeypress())
   )
 })
 

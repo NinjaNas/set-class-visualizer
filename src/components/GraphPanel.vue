@@ -8,7 +8,12 @@ defineProps<{
 
 <template>
   <div class="graph-container">
-    <ZoomButton :zoomRef="zoomRef" @changeZoom="(d) => $emit('changeZoom', d)"></ZoomButton>
+    <ZoomButton
+      :zoomRef="zoomRef"
+      @changeZoom="(d) => $emit('changeZoom', d)"
+      @focusedOnText="$emit('focusedOnText')"
+      @blurredOnText="$emit('blurredOnText')"
+    ></ZoomButton>
   </div>
 </template>
 

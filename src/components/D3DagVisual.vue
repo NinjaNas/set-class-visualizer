@@ -40,6 +40,7 @@ const graphSize = ref<{ width: number; height: number }>({ width: 0, height: 0 }
 const zoomRef = ref<number>(0.1)
 const isVerticalPanelOpen = ref<boolean>(false)
 const focusPanel = ref<string>('horizontal')
+const textFieldFocused = ref<boolean>(false)
 
 const prevSelectedSets = ref<string[]>([])
 const selectedSets = ref<string[]>([])
@@ -361,12 +362,18 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <GraphPanel :zoomRef="zoomRef" @changeZoom="changeZoom"></GraphPanel>
+  <GraphPanel
+    :zoomRef="zoomRef"
+    @changeZoom="changeZoom"
+    @focusedOnText="textFieldFocused = true"
+    @blurredOnText="textFieldFocused = false"
+  ></GraphPanel>
   <svg ref="svgRef"></svg>
   <HorizontalPanel
     :class="{ active: focusPanel === 'horizontal' }"
     @focusHorizontal="focusPanel = 'horizontal'"
     :selectedSets="selectedSets"
+    :textFieldFocused="textFieldFocused"
   ></HorizontalPanel>
   <VerticalPanel
     :class="{ active: focusPanel === 'vertical' }"
