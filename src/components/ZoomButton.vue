@@ -20,6 +20,7 @@ const zoomFormat = () => {
 }
 
 const zoomText = ref<string>(zoomScale())
+const zoomInputRef = ref<null | HTMLInputElement>(null)
 
 const handleFocus = () => {
   zoomText.value = zoomText.value.slice(0, -1)
@@ -29,7 +30,7 @@ const handleFocus = () => {
 // add percent sign back if needed and run changeZoom
 const handleBlur = () => {
   if (zoomText.value.charAt(zoomText.value.length - 1) !== '%') {
-    zoomText.value = zoomText.value + '%'
+    zoomText.value += '%'
   }
   $emit('changeZoom', zoomFormat())
   $emit('blurredOnText')
@@ -37,8 +38,9 @@ const handleBlur = () => {
 
 // changeZoom upon enter and set zoomText
 const handleEnter = () => {
-  $emit('changeZoom', zoomFormat())
-  zoomText.value = zoomScale()
+  if (zoomInputRef.value) {
+    zoomInputRef.value.blur() // calls handleBlur
+  }
 }
 
 // watch zoomRef to change zoomText
@@ -53,14 +55,15 @@ watch(
 <template>
   <label for="zoomInput">
     <button
-      class="zoom-button zoom-minus"
+      class="graph-button graph-button-minus"
       @click="$emit('changeZoom', zoomFormat() - ZOOM_CONSTANT)"
     >
       -
     </button>
     <input
       id="zoomInput"
-      class="zoom-input"
+      ref="zoomInputRef"
+      class="graph-button-input"
       type="text"
       v-model.trim="zoomText"
       @focus="handleFocus()"
@@ -68,7 +71,7 @@ watch(
       v-on:keydown.enter="handleEnter()"
     />
     <button
-      class="zoom-button zoom-plus"
+      class="graph-button graph-button-plus"
       @click="$emit('changeZoom', zoomFormat() + ZOOM_CONSTANT)"
     >
       +
@@ -76,34 +79,4 @@ watch(
   </label>
 </template>
 
-<style>
-.zoom-input {
-  text-align: center;
-  width: 4em;
-  height: 2.5em;
-  background-color: transparent;
-  border: 1px solid var(--color-accent);
-  color: var(--color-text);
-}
-
-.zoom-button {
-  background-color: transparent;
-  border: 1px solid var(--color-accent);
-  color: var(--color-text);
-  cursor: pointer;
-  width: 2em;
-  height: 2.5em;
-}
-
-.zoom-button:hover {
-  background-color: var(--color-hover);
-}
-
-.zoom-minus {
-  border-radius: 25% 0 0 25%;
-}
-
-.zoom-plus {
-  border-radius: 0 25% 25% 0;
-}
-</style>
+<style></style>
