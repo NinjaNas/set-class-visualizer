@@ -13,3 +13,7 @@ export const toFormattedPrimeFormArray = (s: string): string[] => {
 export const isBlackKey = (n: number): boolean => {
   return [1, 3, 6, 8, 10].includes(n % 12)
 }
+
+export const transpose = (n: string, t: number): string => {
+  return ((parseInt(n) + t) % 12).toString()
+}

@@ -3,19 +3,21 @@ import { onMounted, watch, ref, onUnmounted } from 'vue'
 import { JZZ } from 'jzz'
 import { Tiny } from 'jzz-synth-tiny'
 import { Kbd } from 'jzz-input-kbd'
-import { isBlackKey, toFormattedPrimeFormArray, toMidiNote } from '@/functions/helpers'
+import { isBlackKey, toFormattedPrimeFormArray, toMidiNote, transpose } from '@/functions/helpers'
 Tiny(JZZ)
 Kbd(JZZ)
 
 const props = defineProps<{
   selectedSets: string[]
   textFieldFocused: boolean
+  transposition: number
 }>()
 
 const synth = JZZ.synth.Tiny()
 
 const piano = ref<null | any>(null)
 const ascii = ref<null | any>(null)
+const notes = ref<null | string[]>(null)
 const filter = ref<any>(JZZ.Widget())
 const pianoRef = ref<null | HTMLDivElement>(null)
 const currOctave = ref<number>(5)
@@ -99,11 +101,8 @@ const enableKeypress = () => {
   filter.value = JZZ.Widget()
   ascii.value.connect(filter.value)
   filter.value.connect(piano.value)
-  if (props.selectedSets.length) {
-    const notes: string[] = toFormattedPrimeFormArray(props.selectedSets[0]).map((n) =>
-      toMidiNote(n, currOctave.value)
-    )
-    changeFilter(notes)
+  if (props.selectedSets.length && notes.value) {
+    changeFilter(notes.value)
   }
 }
 
@@ -149,18 +148,15 @@ const changeOctave = (octave: number) => {
 }
 
 const limitNotes = () => {
-  if (!props.selectedSets.length) return
+  if (!props.selectedSets.length || !notes.value) return
 
   const fullset: string[] = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11']
-  const notes: string[] = toFormattedPrimeFormArray(props.selectedSets[0]).map((n) =>
-    toMidiNote(n, currOctave.value)
-  )
   const complement: string[] = fullset
     .map((n) => toMidiNote(n, currOctave.value))
-    .filter((e) => !notes.includes(e))
+    .filter((e) => !notes.value!.includes(e))
 
   // change filter to prevent keydown events
-  changeFilter(notes)
+  changeFilter(notes.value)
 
   const styles = {
     disableKey: { backgroundColor: 'red', transition: 'background-color .5s ease-in-out' },
@@ -187,7 +183,7 @@ const limitNotes = () => {
     setKeys(n, false, styles.disableKey, styles.disableKey)
   }
 
-  for (const n of notes) {
+  for (const n of notes.value) {
     if (isBlackKey(parseInt(n))) {
       setKeys(n, true, styles.enableBlackKey, styles.enableBlackKeyPressed)
     } else {
@@ -241,11 +237,20 @@ onMounted(() => {
   initPiano()
   window.addEventListener('keydown', keydownHandler)
 
+  // set red notes and disable keys on update of props
   watch(
-    () => props.selectedSets,
-    () => limitNotes()
+    () => [props.selectedSets, props.transposition],
+    () => {
+      if (props.selectedSets.length) {
+        notes.value = toFormattedPrimeFormArray(props.selectedSets[0]).map((n) =>
+          toMidiNote(transpose(n, props.transposition), currOctave.value)
+        )
+      }
+      limitNotes()
+    }
   )
 
+  // disable all keys when in a text field
   watch(
     () => props.textFieldFocused,
     () => (props.textFieldFocused ? disableKeypress() : enableKeypress())

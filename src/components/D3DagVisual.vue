@@ -1,6 +1,11 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
-import { formatSetToString, toFormattedPrimeFormArray, toMidiNote } from '@/functions/helpers'
+import {
+  formatSetToString,
+  toFormattedPrimeFormArray,
+  toMidiNote,
+  transpose
+} from '@/functions/helpers'
 import VerticalPanel from './VerticalPanel.vue'
 import HorizontalPanel from './HorizontalPanel.vue'
 import GraphPanel from './GraphPanel.vue'
@@ -35,9 +40,11 @@ const MAX_SCALE = 30
 
 const abortController = new AbortController()
 const links = ref<null | Link[]>(null)
+const data = ref<null | GNode[]>(null)
 const svgRef = ref<null | SVGElement>(null)
 const graphSize = ref<{ width: number; height: number }>({ width: 0, height: 0 })
 const zoomRef = ref<number>(0.1)
+const transposition = ref<number>(0)
 const isVerticalPanelOpen = ref<boolean>(false)
 const focusPanel = ref<string>('horizontal')
 const textFieldFocused = ref<boolean>(false)
@@ -177,6 +184,7 @@ const dagBuilder = () => {
   const { width, height } = layout(dag as any)
   graphSize.value.width = width
   graphSize.value.height = height
+  data.value = Array.from(dag.nodes())
 
   const svg = d3
     .select(svgRef.value)
@@ -293,6 +301,31 @@ const changeZoom = (newScale: number) => {
   svg.call(zoom).call(zoom.transform, d3.zoomIdentity.translate(-centerX, -centerY).scale(newScale))
 }
 
+const changeTransposition = (newTranspose: number) => {
+  if (!newTranspose || newTranspose < 0) {
+    newTranspose = 0
+  }
+  if (newTranspose > 11) {
+    newTranspose = 11
+  }
+  transposition.value = newTranspose
+  updateText()
+}
+
+const updateText = () => {
+  if (!svgRef.value) return
+  const svg = d3.select(svgRef.value)
+  if (!data.value) return
+  const nodes = svg.selectAll('text').data(data.value)
+  nodes.text((d) => {
+    // cannot do math on empty set
+    if (d.data === '[""]') {
+      return '{}'
+    }
+    return '{' + JSON.parse(d.data).map((n: string) => transpose(n, transposition.value)) + '}'
+  })
+}
+
 const playAudio = () => {
   if (!selectedSets.value.length) return
 
@@ -313,7 +346,8 @@ const playAudio = () => {
   let i = 0
 
   const playNextNote = () => {
-    const midiNote = toMidiNote(notes[i], 5)
+    // notes will stay in the octave
+    const midiNote = toMidiNote(transpose(notes[i], transposition.value), 5)
     synth.noteOn(0, midiNote, 60)
     currNoteQueue.value.push(midiNote)
     i++
@@ -364,7 +398,9 @@ onUnmounted(() => {
 <template>
   <GraphPanel
     :zoomRef="zoomRef"
+    :transposition="transposition"
     @changeZoom="changeZoom"
+    @changeTransposition="changeTransposition"
     @focusedOnText="textFieldFocused = true"
     @blurredOnText="textFieldFocused = false"
   ></GraphPanel>
@@ -374,6 +410,7 @@ onUnmounted(() => {
     @focusHorizontal="focusPanel = 'horizontal'"
     :selectedSets="selectedSets"
     :textFieldFocused="textFieldFocused"
+    :transposition="transposition"
   ></HorizontalPanel>
   <VerticalPanel
     :class="{ active: focusPanel === 'vertical' }"

@@ -6,6 +6,7 @@ import OptionsTab from '../components/OptionsTab.vue'
 const props = defineProps<{
   selectedSets: string[]
   textFieldFocused: boolean
+  transposition: number
 }>()
 
 const activeTab = ref<string>('piano')
@@ -26,6 +27,7 @@ const activeTab = ref<string>('piano')
       v-show="activeTab === 'piano'"
       :selectedSets="props.selectedSets"
       :textFieldFocused="textFieldFocused"
+      :transposition="transposition"
     ></PianoTab>
     <OptionsTab v-show="activeTab === 'options'"></OptionsTab>
   </div>
