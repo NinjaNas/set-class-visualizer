@@ -16,11 +16,9 @@ const handleFocus = () => {
 }
 
 const handleBlur = () => {
-  if (transpositionText.value.charAt(0) !== 'T') {
-    transpositionText.value = 'T' + transpositionText.value
-  }
   $emit('changeTransposition', parseInt(transpositionText.value.replace(/\D/g, '')))
   $emit('blurredOnText')
+  transpositionText.value = 'T' + props.transposition
 }
 
 const handleEnter = () => {

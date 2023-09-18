@@ -29,11 +29,9 @@ const handleFocus = () => {
 
 // add percent sign back if needed and run changeZoom
 const handleBlur = () => {
-  if (zoomText.value.charAt(zoomText.value.length - 1) !== '%') {
-    zoomText.value += '%'
-  }
   $emit('changeZoom', zoomFormat())
   $emit('blurredOnText')
+  zoomText.value = props.zoomRef * 100 + '%'
 }
 
 // changeZoom upon enter and set zoomText
