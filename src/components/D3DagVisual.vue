@@ -310,6 +310,7 @@ const changeTransposition = (newTranspose: number) => {
   }
   transposition.value = newTranspose
   updateText()
+  clearCurrentQueue()
 }
 
 const updateText = () => {
@@ -326,18 +327,18 @@ const updateText = () => {
   })
 }
 
+const clearCurrentQueue = () => {
+  currNoteQueue.value.forEach((midiNote) => synth.noteOff(0, midiNote))
+  currNoteQueue.value = []
+  intervalIds.value.forEach((id) => clearInterval(id))
+}
+
 const playAudio = () => {
   if (!selectedSets.value.length) return
 
   const notes: string[] = toFormattedPrimeFormArray(selectedSets.value[0])
 
   if (notes[0] === '') return // cannot play empty set
-
-  const clearCurrentQueue = () => {
-    currNoteQueue.value.forEach((midiNote) => synth.noteOff(0, midiNote))
-    currNoteQueue.value = []
-    intervalIds.value.forEach((id) => clearInterval(id))
-  }
 
   if (currNoteQueue.value.length) {
     clearCurrentQueue()
