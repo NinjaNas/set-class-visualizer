@@ -323,7 +323,13 @@ const updateText = () => {
     if (d.data === '[""]') {
       return '{}'
     }
-    return '{' + JSON.parse(d.data).map((n: string) => transpose(n, transposition.value)) + '}'
+    return (
+      '{' +
+      toFormattedPrimeFormArray(d.data).map((n: string) =>
+        transpose(n, transposition.value).replace(/10/, 'T').replace(/11/, 'E')
+      ) +
+      '}'
+    )
   })
 }
 
