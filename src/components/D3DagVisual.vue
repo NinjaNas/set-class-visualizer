@@ -303,7 +303,7 @@ const changeZoom = (newScale: number) => {
 }
 
 const changeTransposition = (newTranspose: number) => {
-  if (!newTranspose || newTranspose < 0) {
+  if ((!newTranspose && newTranspose !== 0) || newTranspose < 0) {
     newTranspose = 0
   }
   if (newTranspose > 11) {
@@ -336,7 +336,7 @@ const updateText = () => {
 
 const changeOctave = (newOctave: number) => {
   // this is 1 octave lower than the midi so the middle C (c4) on piano and midi align
-  if (!newOctave || newOctave < -1) {
+  if ((!newOctave && newOctave !== 0) || newOctave < -1) {
     newOctave = -1
   }
   if (newOctave > 9) {

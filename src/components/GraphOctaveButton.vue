@@ -16,7 +16,7 @@ const handleFocus = () => {
 }
 
 const handleBlur = () => {
-  $emit('changeOctave', parseInt(octaveText.value.replace(/\D/g, '')))
+  $emit('changeOctave', parseInt(octaveText.value.replace(/[^0-9-]/g, '')))
   $emit('blurredOnText')
   octaveText.value = 'O' + props.octave
 }
