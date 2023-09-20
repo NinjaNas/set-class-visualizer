@@ -3,7 +3,8 @@ export const formatSetToString = (s: string): string => {
 }
 
 export const toMidiNote = (s: string, octave: number): string => {
-  return (parseInt(s) + 12 * octave).toString()
+  const val = parseInt(s) + 12 * octave
+  return val > 127 ? (val - 12).toString() : val < 0 ? (val + 12).toString() : val.toString()
 }
 
 export const toFormattedPrimeFormArray = (s: string): string[] => {
