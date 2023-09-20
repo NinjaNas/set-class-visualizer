@@ -14,6 +14,7 @@ import {
   coordSimplex,
   decrossTwoLayer,
   graphConnect,
+  graphJson,
   layeringSimplex,
   shapeEllipse,
   sugiyama,
@@ -65,7 +66,6 @@ const fetchData = async () => {
     if (flatRes.ok) {
       const data: string[] = await flatRes.json()
       links.value = linkBuilder(data)
-      localStorage.setItem('links', JSON.stringify(links.value))
     } else {
       console.log('Not 200')
     }
@@ -95,8 +95,31 @@ const linkBuilder = (data: string[], condition: boolean = true) => {
   return links
 }
 
-const dagBuilder = () => {
-  if (!links.value || !svgRef.value) return
+const buildDag = () => {
+  if (!links.value) return
+  const builder = graphConnect()
+    .sourceId(({ source }: { source: string }) => source)
+    .targetId(({ target }: { target: string }) => target)
+  const dagBuild = builder(links.value)
+  const layout = sugiyama()
+    .layering(layeringSimplex())
+    .decross(decrossTwoLayer().order(twolayerGreedy().base(twolayerAgg())))
+    .coord(coordSimplex())
+    .nodeSize([2 * NODE_RADIUS, 2 * NODE_RADIUS])
+    .gap([NODE_RADIUS, NODE_RADIUS])
+    .tweaks([tweakShape([2 * NODE_RADIUS, 2 * NODE_RADIUS], shapeEllipse)])
+
+  const { width, height } = layout(dagBuild as any)
+  graphSize.value.width = width
+  graphSize.value.height = height
+  localStorage.setItem('dag', JSON.stringify(dagBuild))
+  localStorage.setItem('w', JSON.stringify(width))
+  localStorage.setItem('h', JSON.stringify(height))
+  return dagBuild
+}
+
+const useDag = async () => {
+  if (!svgRef.value) return
 
   const removePrevHighlight = () => {
     if (!prevSelectedSets.value.length) return
@@ -169,22 +192,30 @@ const dagBuilder = () => {
     return sets
   }
 
-  const builder = graphConnect()
-    .sourceId(({ source }: { source: string }) => source)
-    .targetId(({ target }: { target: string }) => target)
-  const dag = builder(links.value)
+  const getDag = localStorage.getItem('dag')
+  let dag = null
+  if (getDag) {
+    const builder = graphJson()
+      .nodeDatum((data) => data as string)
+      .linkDatum((data) => data as Link)
+    dag = builder(JSON.parse(getDag))
+    const width = localStorage.getItem('w')
+    const height = localStorage.getItem('h')
+    if (width && height) {
+      graphSize.value.width = JSON.parse(width)
+      graphSize.value.height = JSON.parse(height)
+    }
 
+    console.log('setting dag from local')
+  } else {
+    await fetchData()
+    dag = buildDag()
+  }
+
+  if (!dag) return
+  console.log(graphSize.value)
   const zoom = d3.zoom<SVGElement, unknown>().scaleExtent([MIN_SCALE, MAX_SCALE]).on('zoom', zoomed)
-  const layout = sugiyama()
-    .layering(layeringSimplex())
-    .decross(decrossTwoLayer().order(twolayerGreedy().base(twolayerAgg())))
-    .coord(coordSimplex())
-    .nodeSize([2 * NODE_RADIUS, 2 * NODE_RADIUS])
-    .gap([NODE_RADIUS, NODE_RADIUS])
-    .tweaks([tweakShape([2 * NODE_RADIUS, 2 * NODE_RADIUS], shapeEllipse)])
-  const { width, height } = layout(dag as any)
-  graphSize.value.width = width
-  graphSize.value.height = height
+
   data.value = Array.from(dag.nodes())
 
   const svg = d3
@@ -398,14 +429,7 @@ const updateDimensionsHandler = () => {
 }
 
 onMounted(async () => {
-  const getLinks = localStorage.getItem('links')
-  if (getLinks) {
-    links.value = JSON.parse(getLinks)
-    console.log('setting links from local')
-  } else {
-    await fetchData()
-  }
-  dagBuilder()
+  useDag()
   window.addEventListener('resize', updateDimensionsHandler)
 })
 
