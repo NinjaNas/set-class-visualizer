@@ -1,10 +1,12 @@
 <script setup lang="ts">
+import GraphOctaveButton from './GraphOctaveButton.vue'
 import TranspositionButton from './TranspositionButton.vue'
 import ZoomButton from './ZoomButton.vue'
 
 defineProps<{
   zoomRef: number
   transposition: number
+  octave: number
 }>()
 </script>
 
@@ -22,6 +24,13 @@ defineProps<{
       @focusedOnText="$emit('focusedOnText')"
       @blurredOnText="$emit('blurredOnText')"
     ></TranspositionButton>
+    <GraphOctaveButton
+      :octave="octave"
+      @changeOctave="(d) => $emit('changeOctave', d)"
+      @focusedOnText="$emit('focusedOnText')"
+      @blurredOnText="$emit('blurredOnText')"
+    >
+    </GraphOctaveButton>
   </div>
 </template>
 

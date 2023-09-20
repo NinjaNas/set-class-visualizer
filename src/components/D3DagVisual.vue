@@ -45,6 +45,7 @@ const svgRef = ref<null | SVGElement>(null)
 const graphSize = ref<{ width: number; height: number }>({ width: 0, height: 0 })
 const zoomRef = ref<number>(0.1)
 const transposition = ref<number>(0)
+const graphAudioOctave = ref<number>(4)
 const isVerticalPanelOpen = ref<boolean>(false)
 const focusPanel = ref<string>('horizontal')
 const textFieldFocused = ref<boolean>(false)
@@ -333,6 +334,18 @@ const updateText = () => {
   })
 }
 
+const changeOctave = (newOctave: number) => {
+  // this is 1 octave lower than the midi so the middle C (c4) on piano and midi align
+  if (!newOctave || newOctave < -1) {
+    newOctave = -1
+  }
+  if (newOctave > 9) {
+    newOctave = 9
+  }
+  graphAudioOctave.value = newOctave
+  clearCurrentQueue()
+}
+
 const clearCurrentQueue = () => {
   currNoteQueue.value.forEach((midiNote) => synth.noteOff(0, midiNote))
   currNoteQueue.value = []
@@ -354,7 +367,10 @@ const playAudio = () => {
 
   const playNextNote = () => {
     // notes will stay in the octave
-    const midiNote = toMidiNote(transpose(notes[i], transposition.value), 5)
+    const midiNote = toMidiNote(
+      transpose(notes[i], transposition.value),
+      graphAudioOctave.value + 1
+    )
     synth.noteOn(0, midiNote, 60)
     currNoteQueue.value.push(midiNote)
     i++
@@ -406,8 +422,10 @@ onUnmounted(() => {
   <GraphPanel
     :zoomRef="zoomRef"
     :transposition="transposition"
+    :octave="graphAudioOctave"
     @changeZoom="changeZoom"
     @changeTransposition="changeTransposition"
+    @changeOctave="changeOctave"
     @focusedOnText="textFieldFocused = true"
     @blurredOnText="textFieldFocused = false"
   ></GraphPanel>
