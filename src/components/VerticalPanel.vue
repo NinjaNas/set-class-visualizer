@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { formatSetToString } from '@/functions/helpers'
+import { formatSetToString, transpose, toFormattedPrimeFormArray } from '@/functions/helpers'
 
-defineProps<{
+const props = defineProps<{
   selectedSets: string[]
   isVerticalPanelOpen: boolean
+  transposition: number
 }>()
 </script>
 
@@ -13,7 +14,23 @@ defineProps<{
       <a @click="$emit('closeModal')" class="menuClose"></a>
       <div class="data">
         <h1>Prime Form:</h1>
-        <h1>{{ formatSetToString(selectedSets[0]) }}</h1>
+        <p class="h1-font">{{ formatSetToString(selectedSets[0]) }}</p>
+        <h1>Current Form:</h1>
+        <p class="h1-font">
+          {{
+            '{' +
+            toFormattedPrimeFormArray(selectedSets[0])
+              .map((n: string) =>
+                transpose(n, props.transposition).replace(/10/, 'T').replace(/11/, 'E')
+              )
+              .toString() +
+            '}'
+          }}
+        </p>
+        <h1>Forte Number:</h1>
+        <p class="h1-font">
+          {{ formatSetToString(selectedSets[0], true) }}
+        </p>
       </div>
     </div>
   </transition>
@@ -57,5 +74,9 @@ defineProps<{
   font-size: 2.5em;
   padding-top: 0.5em;
   padding-right: 1em;
+}
+
+.h1-font {
+  font-size: 2em;
 }
 </style>

@@ -29,7 +29,10 @@ const activeTab = ref<string>('piano')
       :textFieldFocused="textFieldFocused"
       :transposition="transposition"
     ></PianoTab>
-    <OptionsTab v-show="activeTab === 'options'"></OptionsTab>
+    <OptionsTab
+      v-show="activeTab === 'options'"
+      @changeGraphText="(d: boolean) => $emit('changeGraphText', d)"
+    ></OptionsTab>
   </div>
 </template>
 

@@ -59,13 +59,14 @@ const intervalIds = ref<number[]>([])
 
 const fetchData = async () => {
   try {
-    const flatRes = await fetch(
-      'https://hcda8f8dtk.execute-api.us-east-1.amazonaws.com/prod/api/flatdata/primeForm/',
+    const res = await fetch(
+      'https://hcda8f8dtk.execute-api.us-east-1.amazonaws.com/prod/api/data/number,primeForm/',
       { signal: abortController.signal }
     )
-    if (flatRes.ok) {
-      const data: string[] = await flatRes.json()
+    if (res.ok) {
+      const data: { number: string; primeForm: string }[] = await res.json()
       links.value = linkBuilder(data)
+      localStorage.setItem('links', JSON.stringify(links.value))
     } else {
       console.log('Not 200')
     }
@@ -77,18 +78,24 @@ const fetchData = async () => {
   }
 }
 
-const linkBuilder = (data: string[], condition: boolean = true) => {
-  const newData: string[][] = data.map((s) => s.slice(1, -1).split(','))
-  let links: Link[] = [{ source: '[""]', target: '["0"]' }]
+const linkBuilder = (data: { number: string; primeForm: string }[], condition: boolean = true) => {
+  const newData: { number: string; primeForm: string[] }[] = data.map((s) => ({
+    primeForm: s.primeForm.slice(1, -1).split(','),
+    number: s.number
+  }))
+  let links: Link[] = [{ source: '[""]|0-1', target: '["0"]|1-1' }]
 
   for (const s of newData) {
     for (const t of newData) {
       if (
-        s.every((e) => t.includes(e)) &&
-        s.length === t.length - 1 &&
-        (condition ? t > s : true)
+        s.primeForm.every((e) => t.primeForm.includes(e)) &&
+        s.primeForm.length === t.primeForm.length - 1 &&
+        (condition ? t.primeForm > s.primeForm : true)
       ) {
-        links.push({ source: '[' + s.toString() + ']', target: '[' + t.toString() + ']' })
+        links.push({
+          source: '[' + s.primeForm.toString() + ']' + '|' + s.number,
+          target: '[' + t.primeForm.toString() + ']' + '|' + t.number
+        })
       }
     }
   }
@@ -213,7 +220,6 @@ const useDag = async () => {
   }
 
   if (!dag) return
-  console.log(graphSize.value)
   const zoom = d3.zoom<SVGElement, unknown>().scaleExtent([MIN_SCALE, MAX_SCALE]).on('zoom', zoomed)
 
   data.value = Array.from(dag.nodes())
@@ -341,18 +347,25 @@ const changeTransposition = (newTranspose: number) => {
     newTranspose = 11
   }
   transposition.value = newTranspose
-  updateText()
+  if (localStorage.getItem('graphText') === 'prime') {
+    updateOctaveText()
+  }
   clearCurrentQueue()
 }
 
-const updateText = () => {
+const getText = () => {
   if (!svgRef.value) return
   const svg = d3.select(svgRef.value)
   if (!data.value) return
-  const nodes = svg.selectAll('text').data(data.value)
+  return svg.selectAll('text').data(data.value)
+}
+
+const updateOctaveText = () => {
+  const nodes = getText()
+  if (!nodes) return
   nodes.text((d) => {
     // cannot do math on empty set
-    if (d.data === '[""]') {
+    if (d.data.split('|')[0] === '[""]') {
       return '{}'
     }
     return (
@@ -363,6 +376,16 @@ const updateText = () => {
       '}'
     )
   })
+}
+
+const changeGraphText = (bool: boolean) => {
+  if (bool) {
+    const nodes = getText()
+    if (!nodes) return
+    nodes.text((d) => formatSetToString(d.data, bool))
+  } else {
+    updateOctaveText()
+  }
 }
 
 const changeOctave = (newOctave: number) => {
@@ -457,6 +480,7 @@ onUnmounted(() => {
   <HorizontalPanel
     :class="{ active: focusPanel === 'horizontal' }"
     @focusHorizontal="focusPanel = 'horizontal'"
+    @changeGraphText="changeGraphText"
     :selectedSets="selectedSets"
     :textFieldFocused="textFieldFocused"
     :transposition="transposition"
@@ -465,6 +489,7 @@ onUnmounted(() => {
     :class="{ active: focusPanel === 'vertical' }"
     @focusVertical="focusPanel = 'vertical'"
     :selectedSets="selectedSets"
+    :transposition="transposition"
     :isVerticalPanelOpen="isVerticalPanelOpen"
     @closeModal="isVerticalPanelOpen = false"
   ></VerticalPanel>

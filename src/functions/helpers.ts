@@ -1,5 +1,5 @@
-export const formatSetToString = (s: string): string => {
-  return '{' + s.slice(1, -1).replace(/"/g, '') + '}'
+export const formatSetToString = (s: string, formatForte: boolean = false): string => {
+  return formatForte ? s.split('|')[1] : '{' + s.split('|')[0].slice(1, -1).replace(/"/g, '') + '}'
 }
 
 export const toMidiNote = (s: string, octave: number): string => {
@@ -8,7 +8,7 @@ export const toMidiNote = (s: string, octave: number): string => {
 }
 
 export const toFormattedPrimeFormArray = (s: string): string[] => {
-  return JSON.parse(s.replace(/T/, '10').replace(/E/, '11'))
+  return JSON.parse(s.split('|')[0].replace(/T/, '10').replace(/E/, '11'))
 }
 
 export const isBlackKey = (n: number): boolean => {

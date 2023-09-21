@@ -18,9 +18,18 @@ const setTheme = () => {
   }
 }
 
+const setGraphText = () => {
+  const storedDisplay = localStorage.getItem('graphText')
+
+  if (!storedDisplay) {
+    localStorage.setItem('graphText', 'prime')
+  }
+}
+
 onMounted(() => {
   window.addEventListener('wheel', preventCtrlZoom, { passive: false })
   setTheme()
+  setGraphText()
 })
 
 onUnmounted(() => {
