@@ -10,18 +10,7 @@ import VerticalPanel from './VerticalPanel.vue'
 import HorizontalPanel from './HorizontalPanel.vue'
 import GraphPanel from './GraphPanel.vue'
 import * as d3 from 'd3'
-import {
-  coordSimplex,
-  decrossTwoLayer,
-  graphConnect,
-  graphJson,
-  layeringSimplex,
-  shapeEllipse,
-  sugiyama,
-  tweakShape,
-  twolayerAgg,
-  twolayerGreedy
-} from 'd3-dag'
+import { graphJson } from 'd3-dag'
 import { JZZ } from 'jzz'
 import { Tiny } from 'jzz-synth-tiny'
 Tiny(JZZ)
@@ -31,6 +20,12 @@ import type { MutGraphNode, MutGraphLink } from 'd3-dag'
 type Link = { source: string; target: string }
 type GNode = MutGraphNode<string, Link>
 type GLink = MutGraphLink<string, Link>
+type DagJSONObject = {
+  size: { width: number; height: number }
+  nodes: { x: number; y: number; data: string }[]
+  links: { source: string; target: string; points: number[][]; data: Link[] }
+  v: number
+}
 
 const NODE_RADIUS = 50
 const ARROW_SIZE = (NODE_RADIUS * NODE_RADIUS) / 30.0
@@ -40,8 +35,8 @@ const MIN_SCALE = 0.1
 const MAX_SCALE = 30
 
 const abortController = new AbortController()
-const links = ref<null | Link[]>(null)
-const data = ref<null | GNode[]>(null)
+const jsonData = ref<null | DagJSONObject>(null)
+const nodeData = ref<null | GNode[]>(null)
 const svgRef = ref<null | SVGElement>(null)
 const graphSize = ref<{ width: number; height: number }>({ width: 0, height: 0 })
 const zoomRef = ref<number>(0.1)
@@ -57,16 +52,16 @@ const selectedSets = ref<string[]>([])
 const currNoteQueue = ref<string[]>([])
 const intervalIds = ref<number[]>([])
 
-const fetchData = async () => {
+const fetchDagData = async (url: string) => {
   try {
     const res = await fetch(
-      'https://hcda8f8dtk.execute-api.us-east-1.amazonaws.com/prod/api/data/number,primeForm/',
+      'https://hcda8f8dtk.execute-api.us-east-1.amazonaws.com/prod/api/data/d3/' + url,
       { signal: abortController.signal }
     )
     if (res.ok) {
-      const data: { number: string; primeForm: string }[] = await res.json()
-      links.value = linkBuilder(data)
-      localStorage.setItem('links', JSON.stringify(links.value))
+      const dataRes: DagJSONObject = await res.json()
+      localStorage.setItem(url, JSON.stringify(dataRes))
+      jsonData.value = dataRes
     } else {
       console.log('Not 200')
     }
@@ -78,55 +73,8 @@ const fetchData = async () => {
   }
 }
 
-const linkBuilder = (data: { number: string; primeForm: string }[], condition: boolean = true) => {
-  const newData: { number: string; primeForm: string[] }[] = data.map((s) => ({
-    primeForm: s.primeForm.slice(1, -1).split(','),
-    number: s.number
-  }))
-  let links: Link[] = [{ source: '[""]|0-1', target: '["0"]|1-1' }]
-
-  for (const s of newData) {
-    for (const t of newData) {
-      if (
-        s.primeForm.every((e) => t.primeForm.includes(e)) &&
-        s.primeForm.length === t.primeForm.length - 1 &&
-        (condition ? t.primeForm > s.primeForm : true)
-      ) {
-        links.push({
-          source: '[' + s.primeForm.toString() + ']' + '|' + s.number,
-          target: '[' + t.primeForm.toString() + ']' + '|' + t.number
-        })
-      }
-    }
-  }
-  return links
-}
-
-const buildDag = () => {
-  if (!links.value) return
-  const builder = graphConnect()
-    .sourceId(({ source }: { source: string }) => source)
-    .targetId(({ target }: { target: string }) => target)
-  const dagBuild = builder(links.value)
-  const layout = sugiyama()
-    .layering(layeringSimplex())
-    .decross(decrossTwoLayer().order(twolayerGreedy().base(twolayerAgg())))
-    .coord(coordSimplex())
-    .nodeSize([2 * NODE_RADIUS, 2 * NODE_RADIUS])
-    .gap([NODE_RADIUS, NODE_RADIUS])
-    .tweaks([tweakShape([2 * NODE_RADIUS, 2 * NODE_RADIUS], shapeEllipse)])
-
-  const { width, height } = layout(dagBuild as any)
-  graphSize.value.width = width
-  graphSize.value.height = height
-  localStorage.setItem('dag', JSON.stringify(dagBuild))
-  localStorage.setItem('w', JSON.stringify(width))
-  localStorage.setItem('h', JSON.stringify(height))
-  return dagBuild
-}
-
 const useDag = async () => {
-  if (!svgRef.value) return
+  if (!svgRef.value || !jsonData.value) return
 
   const removePrevHighlight = () => {
     if (!prevSelectedSets.value.length) return
@@ -199,30 +147,18 @@ const useDag = async () => {
     return sets
   }
 
-  const getDag = localStorage.getItem('dag')
-  let dag = null
-  if (getDag) {
-    const builder = graphJson()
-      .nodeDatum((data) => data as string)
-      .linkDatum((data) => data as Link)
-    dag = builder(JSON.parse(getDag))
-    const width = localStorage.getItem('w')
-    const height = localStorage.getItem('h')
-    if (width && height) {
-      graphSize.value.width = JSON.parse(width)
-      graphSize.value.height = JSON.parse(height)
-    }
+  const builder = graphJson()
+    .nodeDatum((data) => data as string)
+    .linkDatum((data) => data as Link)
+  const dag = builder(jsonData.value)
+  graphSize.value.width = jsonData.value.size.width
+  graphSize.value.height = jsonData.value.size.height
 
-    console.log('setting dag from local')
-  } else {
-    await fetchData()
-    dag = buildDag()
-  }
+  nodeData.value = Array.from(dag.nodes()) // used to get the text data outside of this function
 
-  if (!dag) return
+  // console.log('setting dag from local')
+
   const zoom = d3.zoom<SVGElement, unknown>().scaleExtent([MIN_SCALE, MAX_SCALE]).on('zoom', zoomed)
-
-  data.value = Array.from(dag.nodes())
 
   const svg = d3
     .select(svgRef.value)
@@ -356,8 +292,8 @@ const changeTransposition = (newTranspose: number) => {
 const getText = () => {
   if (!svgRef.value) return
   const svg = d3.select(svgRef.value)
-  if (!data.value) return
-  return svg.selectAll('text').data(data.value)
+  if (!nodeData.value) return
+  return svg.selectAll('text').data(nodeData.value)
 }
 
 const updateOctaveText = () => {
@@ -451,7 +387,23 @@ const updateDimensionsHandler = () => {
   d3.select(svgRef.value).attr('width', window.innerWidth).attr('height', window.innerHeight)
 }
 
+const useLocalOrFetch = async () => {
+  const dags = {
+    strictdagprimeforte: localStorage.getItem('strictdagprimeforte'),
+    cardinaldagprimeforte: localStorage.getItem('cardinaldagprimeforte')
+  }
+
+  if (dags.strictdagprimeforte) {
+    jsonData.value = JSON.parse(dags.strictdagprimeforte)
+  } else if (dags.cardinaldagprimeforte) {
+    jsonData.value = JSON.parse(dags.cardinaldagprimeforte)
+  } else {
+    await fetchDagData('strictdagprimeforte')
+  }
+}
+
 onMounted(async () => {
+  await useLocalOrFetch()
   useDag()
   window.addEventListener('resize', updateDimensionsHandler)
 })
