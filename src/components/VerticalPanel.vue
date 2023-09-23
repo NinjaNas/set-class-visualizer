@@ -13,20 +13,18 @@ const props = defineProps<{
     <div v-if="isVerticalPanelOpen" class="vertical-panel" @click="$emit('focusVertical')">
       <a @click="$emit('closeModal')" class="menuClose"></a>
       <div class="data">
-        <h1>Prime Form:</h1>
-        <p class="h1-font">{{ formatSetToString(selectedSets[0]) }}</p>
         <h1>Current Form:</h1>
         <p class="h1-font">
           {{
             '{' +
-            toFormattedPrimeFormArray(selectedSets[0])
-              .map((n: string) =>
-                transpose(n, props.transposition).replace(/10/, 'T').replace(/11/, 'E')
-              )
-              .toString() +
+            toFormattedPrimeFormArray(selectedSets[0]).map((n: string) =>
+              transpose(n, props.transposition).replace(/10/, 'T').replace(/11/, 'E')
+            ) +
             '}'
           }}
         </p>
+        <h1>Prime Form:</h1>
+        <p class="h1-font">{{ formatSetToString(selectedSets[0]) }}</p>
         <h1>Forte Number:</h1>
         <p class="h1-font">
           {{ formatSetToString(selectedSets[0], true) }}
