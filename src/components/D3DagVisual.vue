@@ -47,7 +47,7 @@ const focusPanel = ref<string>('horizontal')
 const textFieldFocused = ref<boolean>(false)
 
 const prevSelectedSets = ref<string[]>([])
-const selectedSets = ref<string[]>([])
+const selectedSets = ref<string[]>(['["0","1","2","3","4","5","6","7","8","9","T", "E"]|12-1'])
 
 const currNoteQueue = ref<string[]>([])
 const intervalIds = ref<number[]>([])
@@ -61,6 +61,7 @@ const fetchDagData = async (url: string) => {
     if (res.ok) {
       const dataRes: DagJSONObject = await res.json()
       localStorage.setItem(url, JSON.stringify(dataRes))
+      localStorage.setItem('dag', url)
       jsonData.value = dataRes
     } else {
       console.log('Not 200')
@@ -73,21 +74,17 @@ const fetchDagData = async (url: string) => {
   }
 }
 
-const useDag = async () => {
+const createDag = async () => {
   if (!svgRef.value || !jsonData.value) return
 
   const removePrevHighlight = () => {
     if (!prevSelectedSets.value.length) return
 
     const nodesFilter = (n: GNode) =>
-      selectedSets.value.length
-        ? prevSelectedSets.value.includes(n.data) && !selectedSets.value.includes(n.data)
-        : prevSelectedSets.value.includes(n.data)
+      prevSelectedSets.value.includes(n.data) && !selectedSets.value.includes(n.data)
 
     const linksFilter = (l: GLink) =>
-      selectedSets.value.length
-        ? l.source.data === prevSelectedSets.value[0] && l.source.data !== selectedSets.value[0]
-        : l.source.data === prevSelectedSets.value[0]
+      l.source.data === prevSelectedSets.value[0] && l.source.data !== selectedSets.value[0]
 
     nodes
       .filter((n) => nodesFilter(n))
@@ -103,14 +100,10 @@ const useDag = async () => {
     if (!currOnHoverSets.length) return
 
     const nodesFilter = (n: GNode) =>
-      selectedSets.value.length
-        ? currOnHoverSets.includes(n.data) && !selectedSets.value.includes(n.data)
-        : currOnHoverSets.includes(n.data)
+      currOnHoverSets.includes(n.data) && !selectedSets.value.includes(n.data)
 
     const linksFilter = (l: GLink) =>
-      selectedSets.value.length
-        ? l.source.data === currOnHoverSets[0] && l.source.data !== selectedSets.value[0]
-        : l.source.data === currOnHoverSets[0]
+      l.source.data === currOnHoverSets[0] && l.source.data !== selectedSets.value[0]
 
     nodes
       .filter((n) => nodesFilter(n))
@@ -284,9 +277,11 @@ const changeTransposition = (newTranspose: number) => {
   }
   transposition.value = newTranspose
   if (localStorage.getItem('graphText') === 'prime') {
-    updateOctaveText()
+    changePrimeFormAndUpdateOctaveText()
   }
-  clearCurrentQueue()
+  if (currNoteQueue.value.length) {
+    clearCurrentQueue()
+  }
 }
 
 const getText = () => {
@@ -296,7 +291,7 @@ const getText = () => {
   return svg.selectAll('text').data(nodeData.value)
 }
 
-const updateOctaveText = () => {
+const changePrimeFormAndUpdateOctaveText = () => {
   const nodes = getText()
   if (!nodes) return
   nodes.text((d) => {
@@ -314,13 +309,18 @@ const updateOctaveText = () => {
   })
 }
 
+const changeToForte = () => {
+  const nodes = getText()
+  if (!nodes) return
+  nodes.text((d) => formatSetToString(d.data, true))
+}
+
+// true for forte and false for primeForm
 const changeGraphText = (bool: boolean) => {
   if (bool) {
-    const nodes = getText()
-    if (!nodes) return
-    nodes.text((d) => formatSetToString(d.data, bool))
+    changeToForte()
   } else {
-    updateOctaveText()
+    changePrimeFormAndUpdateOctaveText()
   }
 }
 
@@ -333,7 +333,9 @@ const changeOctave = (newOctave: number) => {
     newOctave = 9
   }
   graphAudioOctave.value = newOctave
-  clearCurrentQueue()
+  if (currNoteQueue.value.length) {
+    clearCurrentQueue()
+  }
 }
 
 const clearCurrentQueue = () => {
@@ -343,8 +345,6 @@ const clearCurrentQueue = () => {
 }
 
 const playAudio = () => {
-  if (!selectedSets.value.length) return
-
   const notes: string[] = toFormattedPrimeFormArray(selectedSets.value[0])
 
   if (notes[0] === '') return // cannot play empty set
@@ -373,7 +373,9 @@ const playAudio = () => {
       if (i >= notes.length) {
         intervalIds.value.push(
           setInterval(() => {
-            clearCurrentQueue()
+            if (currNoteQueue.value.length) {
+              clearCurrentQueue()
+            }
           }, 1000)
         )
       } else {
@@ -387,24 +389,43 @@ const updateDimensionsHandler = () => {
   d3.select(svgRef.value).attr('width', window.innerWidth).attr('height', window.innerHeight)
 }
 
-const useLocalOrFetch = async () => {
-  const dags = {
+const useLocalOrFetchAndCreateDag = async (dagStr: string) => {
+  if (!svgRef.value) return
+  const dags: { [key: string]: null | string } = {
     strictdagprimeforte: localStorage.getItem('strictdagprimeforte'),
     cardinaldagprimeforte: localStorage.getItem('cardinaldagprimeforte')
   }
 
-  if (dags.strictdagprimeforte) {
-    jsonData.value = JSON.parse(dags.strictdagprimeforte)
-  } else if (dags.cardinaldagprimeforte) {
-    jsonData.value = JSON.parse(dags.cardinaldagprimeforte)
+  if (currNoteQueue.value.length) {
+    clearCurrentQueue()
+  }
+
+  const targetDag = dags[dagStr]
+
+  if (targetDag) {
+    jsonData.value = JSON.parse(targetDag)
   } else {
-    await fetchDagData('strictdagprimeforte')
+    await fetchDagData(dagStr)
+  }
+
+  selectedSets.value = ['["0","1","2","3","4","5","6","7","8","9","T", "E"]|12-1'] // reset to full set
+
+  svgRef.value.innerHTML = '' // clear old dag if it exists
+  createDag()
+
+  const getGraphText = localStorage.getItem('graphText')
+  if (getGraphText) {
+    changeGraphText(getGraphText === 'forte' ? true : false)
   }
 }
 
 onMounted(async () => {
-  await useLocalOrFetch()
-  useDag()
+  const currDag = localStorage.getItem('dag')
+  if (currDag) {
+    await useLocalOrFetchAndCreateDag(currDag)
+  } else {
+    await useLocalOrFetchAndCreateDag('strictdagprimeforte')
+  }
   window.addEventListener('resize', updateDimensionsHandler)
 })
 
@@ -433,6 +454,7 @@ onUnmounted(() => {
     :class="{ active: focusPanel === 'horizontal' }"
     @focusHorizontal="focusPanel = 'horizontal'"
     @changeGraphText="changeGraphText"
+    @useLocalOrFetchAndCreateDag="useLocalOrFetchAndCreateDag"
     :selectedSets="selectedSets"
     :textFieldFocused="textFieldFocused"
     :transposition="transposition"
