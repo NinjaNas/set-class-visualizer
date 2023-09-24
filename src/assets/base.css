@@ -92,6 +92,14 @@
   z-index: 999 !important;
 }
 
+/* container with text and slider */
+.toggle-container {
+  display: flex;
+  align-items: center;
+  justify-content: left;
+  gap: 10px;
+}
+
 /* slider container */
 .switch {
   position: relative;
