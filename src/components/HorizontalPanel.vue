@@ -32,6 +32,7 @@ const activeTab = ref<string>('piano')
     <OptionsTab
       v-show="activeTab === 'options'"
       @changeGraphText="(d: boolean) => $emit('changeGraphText', d)"
+      @useLocalOrFetchAndCreateDag="(d: string) => $emit('useLocalOrFetchAndCreateDag', d)"
     ></OptionsTab>
   </div>
 </template>
