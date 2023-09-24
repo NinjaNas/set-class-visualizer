@@ -11,7 +11,7 @@ watch(darkMode, () => {
 
 <template>
   <div class="toggle-container">
-    Dark Mode
+    Light Mode / Dark Mode
     <label class="switch" for="darkModeButton">
       <input
         id="darkModeButton"

@@ -13,7 +13,7 @@ watch(forte, () => {
 
 <template>
   <div class="toggle-container">
-    Toggle Forte Number
+    Prime Form / Forte Number
     <label class="switch" for="graphTextButton">
       <input id="graphTextButton" type="checkbox" @click="forte = !forte" :checked="forte" />
       <span class="slider"></span>
