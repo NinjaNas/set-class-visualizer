@@ -47,7 +47,7 @@ const focusPanel = ref<string>('horizontal')
 const textFieldFocused = ref<boolean>(false)
 
 const prevSelectedSets = ref<string[]>([])
-const selectedSets = ref<string[]>(['["0","1","2","3","4","5","6","7","8","9","T", "E"]|12-1'])
+const selectedSets = ref<string[]>(['["0","1","2","3","4","5","6","7","8","9","T","E"]|12-1'])
 
 const currNoteQueue = ref<string[]>([])
 const intervalIds = ref<number[]>([])
@@ -148,8 +148,6 @@ const createDag = async () => {
   graphSize.value.height = jsonData.value.size.height
 
   nodeData.value = Array.from(dag.nodes()) // used to get the text data outside of this function
-
-  // console.log('setting dag from local')
 
   const zoom = d3.zoom<SVGElement, unknown>().scaleExtent([MIN_SCALE, MAX_SCALE]).on('zoom', zoomed)
 
