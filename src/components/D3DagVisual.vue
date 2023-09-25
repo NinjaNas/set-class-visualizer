@@ -406,7 +406,7 @@ const useLocalOrFetchAndCreateDag = async (dagStr: string) => {
     await fetchDagData(dagStr)
   }
 
-  selectedSets.value = ['["0","1","2","3","4","5","6","7","8","9","T", "E"]|12-1'] // reset to full set
+  selectedSets.value = ['["0","1","2","3","4","5","6","7","8","9","T","E"]|12-1'] // reset to full set
 
   svgRef.value.innerHTML = '' // clear old dag if it exists
   createDag()
