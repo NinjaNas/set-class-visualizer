@@ -152,7 +152,7 @@ const limitNotes = () => {
 
   const fullset: string[] = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11']
   const complement: string[] = fullset
-    .map((n) => toMidiNote(n, currOctave.value))
+    .map((n) => toMidiNote(transpose(n, props.transposition), currOctave.value))
     .filter((e) => !notes.value!.includes(e))
 
   // change filter to prevent keydown events
@@ -239,13 +239,11 @@ onMounted(() => {
 
   // set red notes and disable keys on update of props
   watch(
-    () => [props.selectedSets, props.transposition],
+    () => [props.selectedSets, props.transposition, currOctave.value],
     () => {
-      if (props.selectedSets.length) {
-        notes.value = toFormattedPrimeFormArray(props.selectedSets[0]).map((n) =>
-          toMidiNote(transpose(n, props.transposition), currOctave.value)
-        )
-      }
+      notes.value = toFormattedPrimeFormArray(props.selectedSets[0]).map((n) =>
+        toMidiNote(transpose(n, props.transposition), currOctave.value)
+      )
       limitNotes()
     }
   )
