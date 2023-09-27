@@ -1,24 +1,23 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-const forte = ref<boolean>(localStorage.getItem('graphText') === 'forte' ? true : false)
+
+const localText = localStorage.getItem('graphText')
+const graphText = ref<string>(localText ? localText : 'prime')
 
 const $emit = defineEmits(['changeGraphText'])
 
-watch(forte, () => {
-  const display = forte.value ? 'forte' : 'prime'
-  $emit('changeGraphText', forte.value)
-  localStorage.setItem('graphText', display)
+watch(graphText, () => {
+  $emit('changeGraphText', graphText.value)
+  localStorage.setItem('graphText', graphText.value)
 })
 </script>
 
 <template>
-  <div class="toggle-container">
-    Prime Form / Forte Number
-    <label class="switch" for="graphTextButton">
-      <input id="graphTextButton" type="checkbox" @click="forte = !forte" :checked="forte" />
-      <span class="slider"></span>
-    </label>
-  </div>
+  <label for="graphTextButton">Graph Text:</label>
+  <select id="graphTextButton" name="graphTextButton" v-model="graphText">
+    <option value="prime">Prime Form</option>
+    <option value="forte">Forte Number</option>
+  </select>
 </template>
 
 <style></style>

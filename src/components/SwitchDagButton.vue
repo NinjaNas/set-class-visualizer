@@ -1,31 +1,22 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-const isCardinalDag = ref<boolean>(
-  localStorage.getItem('dag') === 'cardinaldagprimeforte' ? true : false
-)
+const localDag = localStorage.getItem('dag')
+const dag = ref<string>(localDag ? localDag : 'strictdagprimeforte')
 
 const $emit = defineEmits(['useLocalOrFetchAndCreateDag'])
 
-watch(isCardinalDag, () => {
-  const display = isCardinalDag.value ? 'cardinaldagprimeforte' : 'strictdagprimeforte'
-  $emit('useLocalOrFetchAndCreateDag', display)
-  localStorage.setItem('dag', display)
+watch(dag, () => {
+  $emit('useLocalOrFetchAndCreateDag', dag.value)
+  localStorage.setItem('dag', dag.value)
 })
 </script>
 
 <template>
-  <div class="toggle-container">
-    Strictly-Increasing Graph / Cardinality Growth Graph
-    <label class="switch" for="switchDagButton">
-      <input
-        id="switchDagButton"
-        type="checkbox"
-        @click="isCardinalDag = !isCardinalDag"
-        :checked="isCardinalDag"
-      />
-      <span class="slider"></span>
-    </label>
-  </div>
+  <label class="switch" for="switchDagButton">Graph Type: </label>
+  <select id="switchDagButton" name="switchDagButton" v-model="dag">
+    <option value="strictdagprimeforte">Strictly-Increasing Graph</option>
+    <option value="cardinaldagprimeforte">Cardinality Growth Graph</option>
+  </select>
 </template>
 
 <style></style>
