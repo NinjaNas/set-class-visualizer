@@ -22,7 +22,7 @@
 
 /* slider sizes */
 :root {
-  --knobsize: 18px;
+  --knobsize: 1em;
 }
 
 [data-theme='dark'] {
@@ -97,7 +97,7 @@
   display: flex;
   align-items: center;
   justify-content: left;
-  gap: 10px;
+  gap: 2em;
 }
 
 /* slider container */
@@ -188,6 +188,14 @@ input:focus + .slider {
 
 .graph-button-plus {
   border-radius: 0 25% 25% 0;
+}
+
+select {
+  background-color: var(--color-background);
+  color: var(--color-text);
+  height: 2em;
+  border: 1px solid var(--color-accent);
+  cursor: pointer;
 }
 
 *,
