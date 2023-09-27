@@ -10,6 +10,16 @@ const props = defineProps<{
 }>()
 
 const activeTab = ref<string>('piano')
+const selectedMidiIn = ref<string>('')
+const selectedMidiOut = ref<string>('')
+
+const changeMidiIn = (s: string) => {
+  selectedMidiIn.value = s
+}
+
+const changeMidiOut = (s: string) => {
+  selectedMidiOut.value = s
+}
 </script>
 
 <template>
@@ -28,11 +38,15 @@ const activeTab = ref<string>('piano')
       :selectedSets="props.selectedSets"
       :textFieldFocused="textFieldFocused"
       :transposition="transposition"
+      :selectedMidiIn="selectedMidiIn"
+      :selectedMidiOut="selectedMidiOut"
     ></PianoTab>
     <OptionsTab
       v-show="activeTab === 'options'"
-      @changeGraphText="(d: boolean) => $emit('changeGraphText', d)"
+      @changeGraphText="(d: string) => $emit('changeGraphText', d)"
       @useLocalOrFetchAndCreateDag="(d: string) => $emit('useLocalOrFetchAndCreateDag', d)"
+      @changeMidiIn="changeMidiIn"
+      @changeMidiOut="changeMidiOut"
     ></OptionsTab>
   </div>
 </template>

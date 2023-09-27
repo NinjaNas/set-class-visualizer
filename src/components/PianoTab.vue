@@ -11,13 +11,18 @@ const props = defineProps<{
   selectedSets: string[]
   textFieldFocused: boolean
   transposition: number
+  selectedMidiIn: string
+  selectedMidiOut: string
 }>()
 
 const synth = JZZ.synth.Tiny()
 
 const piano = ref<null | any>(null)
 const ascii = ref<null | any>(null)
+const portIn = ref<null | any>(null)
+const portOut = ref<null | any>(null)
 const notes = ref<null | string[]>(null)
+const complement = ref<null | string[]>(null)
 const filter = ref<any>(JZZ.Widget())
 const pianoRef = ref<null | HTMLDivElement>(null)
 const currOctave = ref<number>(5)
@@ -42,11 +47,13 @@ const extendedKeys = ['Y', 'H', 'U', 'J']
 const initPiano = () => {
   setPiano()
   setAscii()
-
+  const localMidiIn = localStorage.getItem('midiIn')
+  const localMidiOut = localStorage.getItem('midiOut')
+  setPortIn(localMidiIn ? localMidiIn : props.selectedMidiIn)
+  setPortOut(localMidiOut ? localMidiOut : props.selectedMidiOut)
+  filter.value.connect(piano.value).connect(synth).connect(portOut.value)
   ascii.value.connect(filter.value)
-  filter.value.connect(piano.value)
-
-  piano.value.connect(synth)
+  portIn.value.connect(filter.value)
 }
 
 const setPiano = () => {
@@ -78,6 +85,22 @@ const setPiano = () => {
   })
 }
 
+const setPortIn = (s: string = '') => {
+  if (s.length) {
+    portIn.value = JZZ().openMidiIn(s)
+  } else {
+    portIn.value = JZZ().openMidiIn()
+  }
+}
+
+const setPortOut = (s: string = '') => {
+  if (s.length) {
+    portOut.value = JZZ().openMidiOut(s)
+  } else {
+    portOut.value = JZZ().openMidiOut()
+  }
+}
+
 const setAscii = () => {
   const keys: { [key: string]: string | null | HTMLDivElement } = { at: pianoRef.value }
 
@@ -94,69 +117,82 @@ const setAscii = () => {
   ascii.value = JZZ.input.ASCII(keys)
 }
 
-const enableKeypress = () => {
+const connectPiano = () => {
+  filter.value.connect(piano.value).connect(synth).connect(portOut.value)
+  ascii.value.connect(filter.value)
+  portIn.value.connect(filter.value)
+}
+
+const disconnectPiano = () => {
+  portIn.value.disconnect(filter.value)
   ascii.value.disconnect(filter.value)
-  filter.value.disconnect(piano.value)
+  filter.value.disconnect(piano.value).disconnect(synth).disconnect(portOut.value)
+}
+
+const enableKeypress = () => {
+  disconnectPiano()
   setAscii()
   filter.value = JZZ.Widget()
-  ascii.value.connect(filter.value)
-  filter.value.connect(piano.value)
-  if (props.selectedSets.length && notes.value) {
-    changeFilter(notes.value)
-  }
+  connectPiano()
+  changeFilter()
 }
 
 const disableKeypress = () => {
-  ascii.value.disconnect(filter.value)
-  filter.value.disconnect(piano.value)
+  disconnectPiano()
   ascii.value = JZZ.input.ASCII()
   filter.value = JZZ.Widget()
-  ascii.value.connect(filter.value)
-  filter.value.connect(piano.value)
+  connectPiano()
 }
 
-const changeFilter = (midiNoteArr: string[]) => {
-  ascii.value.disconnect(filter.value)
-  filter.value.disconnect(piano.value)
+const changeFilter = () => {
+  if (!notes.value) return
+  disconnectPiano()
   filter.value = JZZ.Widget({
     _receive: function (msg: any) {
       // emit if note in array
-      if (midiNoteArr.includes(msg[1].toString())) {
-        this.emit(msg)
+      if (notes.value!.includes(msg[1].toString())) {
+        this._emit(msg)
       }
     }
   })
-  ascii.value.connect(filter.value)
-  filter.value.connect(piano.value)
+  connectPiano()
 }
 
 const changeOctave = (octave: number) => {
-  piano.value.disconnect(synth)
-  filter.value.disconnect(piano.value)
-  ascii.value.disconnect(filter.value)
+  disconnectPiano()
 
   currOctave.value = octave
 
   setPiano()
   setAscii()
 
-  ascii.value.connect(filter.value)
-  filter.value.connect(piano.value)
-  piano.value.connect(synth)
+  connectPiano()
 
   limitNotes()
 }
 
-const limitNotes = () => {
-  if (!props.selectedSets.length || !notes.value) return
+const setNotes = () => {
+  const notesArr = toFormattedPrimeFormArray(props.selectedSets[0])
+  let notesRet = []
+  let complementRet = []
+  const standardFormArr = notesArr.map((e) => transpose(e, 0))
+  for (let i = 0; i <= 127; i++) {
+    if (standardFormArr.includes((i % 12).toString())) {
+      notesRet.push(i.toString())
+    } else {
+      complementRet.push(i.toString())
+    }
+  }
 
-  const fullset: string[] = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11']
-  const complement: string[] = fullset
-    .map((n) => toMidiNote(transpose(n, props.transposition), currOctave.value))
-    .filter((e) => !notes.value!.includes(e))
+  notes.value = notesRet
+  complement.value = complementRet
+}
+
+const limitNotes = () => {
+  if (!props.selectedSets.length || !notes.value || !complement.value) return
 
   // change filter to prevent keydown events
-  changeFilter(notes.value)
+  changeFilter()
 
   const styles = {
     disableKey: { backgroundColor: 'red', transition: 'background-color .5s ease-in-out' },
@@ -179,7 +215,7 @@ const limitNotes = () => {
     key.setStyle(style, stylePressed)
   }
 
-  for (const n of complement) {
+  for (const n of complement.value) {
     setKeys(n, false, styles.disableKey, styles.disableKey)
   }
 
@@ -241,9 +277,7 @@ onMounted(() => {
   watch(
     () => [props.selectedSets, props.transposition, currOctave.value],
     () => {
-      notes.value = toFormattedPrimeFormArray(props.selectedSets[0]).map((n) =>
-        toMidiNote(transpose(n, props.transposition), currOctave.value)
-      )
+      setNotes()
       limitNotes()
     }
   )
@@ -253,9 +287,31 @@ onMounted(() => {
     () => props.textFieldFocused,
     () => (props.textFieldFocused ? disableKeypress() : enableKeypress())
   )
+
+  watch(
+    () => props.selectedMidiIn,
+    () => {
+      console.log(props.selectedMidiIn)
+      disconnectPiano()
+      portIn.value.close()
+      setPortIn(props.selectedMidiIn)
+      connectPiano()
+    }
+  )
+
+  watch(
+    () => props.selectedMidiOut,
+    () => {
+      disconnectPiano()
+      portOut.value.close()
+      setPortOut(props.selectedMidiOut)
+      connectPiano()
+    }
+  )
 })
 
 onUnmounted(() => {
+  disconnectPiano()
   window.removeEventListener('keydown', keydownHandler)
 })
 </script>
