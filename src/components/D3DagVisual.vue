@@ -64,7 +64,7 @@ const fetchDagData = async (url: string) => {
       localStorage.setItem('dag', url)
       jsonData.value = dataRes
     } else {
-      console.log('Not 200')
+      console.log('Not 200', res)
     }
   } catch (error) {
     if ((error as Error).name == 'AbortError') {
@@ -314,10 +314,10 @@ const changeToForte = () => {
 }
 
 // true for forte and false for primeForm
-const changeGraphText = (bool: boolean) => {
-  if (bool) {
+const changeGraphText = (s: string) => {
+  if (s === 'forte') {
     changeToForte()
-  } else {
+  } else if (s === 'prime') {
     changePrimeFormAndUpdateOctaveText()
   }
 }
@@ -413,7 +413,7 @@ const useLocalOrFetchAndCreateDag = async (dagStr: string) => {
 
   const getGraphText = localStorage.getItem('graphText')
   if (getGraphText) {
-    changeGraphText(getGraphText === 'forte' ? true : false)
+    changeGraphText(getGraphText)
   }
 }
 
@@ -466,7 +466,7 @@ onUnmounted(() => {
     @closeModal="isVerticalPanelOpen = false"
   ></VerticalPanel>
 </template>
-l
+
 <style>
 svg {
   shape-rendering: geometricPrecision;
