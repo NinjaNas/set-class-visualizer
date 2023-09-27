@@ -16,5 +16,8 @@ export const isBlackKey = (n: number): boolean => {
 }
 
 export const transpose = (n: string, t: number): string => {
+  if (!n) {
+    return ''
+  }
   return ((parseInt(n) + t) % 12).toString()
 }
