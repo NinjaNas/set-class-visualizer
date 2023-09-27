@@ -10,18 +10,11 @@ watch(darkMode, () => {
 </script>
 
 <template>
-  <div class="toggle-container">
-    Light Mode / Dark Mode
-    <label class="switch" for="darkModeButton">
-      <input
-        id="darkModeButton"
-        type="checkbox"
-        @click="darkMode = !darkMode"
-        :checked="darkMode"
-      />
-      <span class="slider"></span>
-    </label>
-  </div>
+  <label for="darkModeButton">Toggle Dark Mode</label>
+  <label class="switch">
+    <input id="darkModeButton" type="checkbox" @click="darkMode = !darkMode" :checked="darkMode" />
+    <span class="slider"></span>
+  </label>
 </template>
 
 <style></style>
