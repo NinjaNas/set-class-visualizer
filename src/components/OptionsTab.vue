@@ -23,14 +23,23 @@ import SwitchDagButton from './SwitchDagButton.vue'
 
 <style>
 .options-container {
-  margin: 0.2em 38em 0.2em 38em;
+  margin: 2em auto 2em auto;
+  width: min-content;
   border-radius: 10px;
   border: 1px solid var(--color-accent);
   display: grid;
-  gap: 1em 24em;
-  grid-template-columns: repeat(2, max-content);
+  gap: 1em 20%;
+  grid-template-columns: repeat(1, 1fr);
   justify-content: center;
-  padding: 2em 0 2em 0;
+  align-items: center;
+  padding: 2em 4em 2em 4em;
   white-space: nowrap;
+}
+
+@media only screen and (min-width: 480px) {
+  .options-container {
+    grid-template-columns: repeat(2, min-content);
+    padding: 2em 8em 2em 8em;
+  }
 }
 </style>
