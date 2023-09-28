@@ -55,6 +55,7 @@ const changeMidiOut = (s: string) => {
 .tabs {
   display: grid;
   grid-template-columns: repeat(3, min-content);
+  justify-content: center;
   padding: 1% 0 0 1%;
   gap: 1%;
 }
@@ -89,10 +90,19 @@ ul.tabs li {
   border-style: solid;
   border-radius: 5px;
   padding: 8% 2% 8% 2%;
-  min-width: 100px;
+  min-width: 80px;
 }
 
 ul.tabs li:hover {
   background-color: var(--color-hover);
+}
+
+@media only screen and (min-width: 480px) {
+  .tabs {
+    justify-content: initial;
+  }
+  ul.tabs li {
+    min-width: 100px;
+  }
 }
 </style>
