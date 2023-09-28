@@ -31,7 +31,7 @@ import SwitchDagButton from './SwitchDagButton.vue'
 }
 
 .options-container {
-  margin: 2em auto 2em auto;
+  margin: 0.2em auto 0.2em auto;
   width: min-content;
   border-radius: 10px;
   border: 1px solid var(--color-accent);
