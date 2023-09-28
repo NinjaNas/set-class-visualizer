@@ -45,7 +45,7 @@ const props = defineProps<{
   border: 2px;
   border-style: none none none dashed;
   border-color: var(--color-text);
-  overflow-y: scroll;
+  overflow-y: auto;
 }
 
 .data {

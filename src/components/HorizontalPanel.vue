@@ -70,7 +70,7 @@ const changeMidiOut = (s: string) => {
   border: 2px;
   border-style: dashed none none none;
   border-color: var(--color-text);
-  overflow-y: scroll;
+  overflow-y: auto;
 }
 
 span.inner {
