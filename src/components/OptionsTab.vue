@@ -8,6 +8,7 @@ import SwitchDagButton from './SwitchDagButton.vue'
 
 <template>
   <div class="options-container">
+    <h2 class="col-span-2-option-header">Display</h2>
     <LightDarkModeButton></LightDarkModeButton>
     <PrimeForteButtonVue
       @changeGraphText="(d: string) => $emit('changeGraphText', d)"
@@ -16,12 +17,19 @@ import SwitchDagButton from './SwitchDagButton.vue'
       @useLocalOrFetchAndCreateDag="(d: string) => $emit('useLocalOrFetchAndCreateDag', d)"
     >
     </SwitchDagButton>
+    <h2 class="col-span-2-option-header">Midi</h2>
     <MIDIInButton @changeMidiIn="(d: string) => $emit('changeMidiIn', d)"></MIDIInButton>
     <MIDIOutButton @changeMidiOut="(d: string) => $emit('changeMidiOut', d)"></MIDIOutButton>
   </div>
 </template>
 
 <style>
+.col-span-2-option-header {
+  grid-column: span 2;
+  font-weight: bold;
+  text-decoration: underline;
+}
+
 .options-container {
   margin: 2em auto 2em auto;
   width: min-content;
