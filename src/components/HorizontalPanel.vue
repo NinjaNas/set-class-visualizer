@@ -90,7 +90,7 @@ ul.tabs li {
   border-style: solid;
   border-radius: 5px;
   padding: 8% 2% 8% 2%;
-  min-width: 80px;
+  min-width: 79.5px;
 }
 
 ul.tabs li:hover {
