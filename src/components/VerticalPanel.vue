@@ -68,8 +68,8 @@ const findSet = (s: string) => {
         <p class="h1-font" v-show="findSet('z')">
           {{ findSet('z') }}
         </p>
-        <h1>Complement:</h1>
-        <p class="h1-font">
+        <h1 v-show="findSet('complement')">Complement:</h1>
+        <p class="h1-font" v-show="findSet('complement')">
           {{ findSet('complement') }}
         </p>
       </div>
