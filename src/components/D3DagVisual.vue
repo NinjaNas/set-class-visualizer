@@ -51,6 +51,7 @@ const selectedSets = ref<string[]>(['["0","1","2","3","4","5","6","7","8","9","T
 
 const currNoteQueue = ref<string[]>([])
 const intervalIds = ref<number[]>([])
+const graphAudioType = ref<string>('chord')
 
 const fetchDagData = async (url: string) => {
   try {
@@ -182,7 +183,9 @@ const createDag = async () => {
       selectedSets.value = getSelectedSets(d)
 
       isVerticalPanelOpen.value = true
-      playAudio()
+      if (!(graphAudioType.value === 'off')) {
+        playAudio()
+      }
 
       removePrevHighlight()
     })
@@ -351,36 +354,64 @@ const playAudio = () => {
     clearCurrentQueue()
   }
 
-  let i = 0
+  const playChord = () => {
+    for (const n of notes) {
+      const midiNote = toMidiNote(transpose(n, transposition.value), graphAudioOctave.value + 1)
+      synth.noteOn(0, midiNote, 60)
+      currNoteQueue.value.push(midiNote)
+    }
 
-  const playNextNote = () => {
-    // notes will stay in the octave
-    const midiNote = toMidiNote(
-      transpose(notes[i], transposition.value),
-      graphAudioOctave.value + 1
+    intervalIds.value.push(
+      setInterval(() => {
+        if (currNoteQueue.value.length) {
+          clearCurrentQueue()
+        }
+      }, 5000)
     )
-    synth.noteOn(0, midiNote, 60)
-    currNoteQueue.value.push(midiNote)
-    i++
   }
 
-  playNextNote()
+  const playArpeggio = () => {
+    let i = 0
 
-  intervalIds.value.push(
-    setInterval(() => {
-      if (i >= notes.length) {
-        intervalIds.value.push(
-          setInterval(() => {
-            if (currNoteQueue.value.length) {
-              clearCurrentQueue()
-            }
-          }, 1000)
-        )
-      } else {
-        playNextNote()
-      }
-    }, 1000)
-  )
+    const playNextNote = () => {
+      // notes will stay in the octave
+      const midiNote = toMidiNote(
+        transpose(notes[i], transposition.value),
+        graphAudioOctave.value + 1
+      )
+      synth.noteOn(0, midiNote, 60)
+      currNoteQueue.value.push(midiNote)
+      i++
+    }
+
+    playNextNote()
+
+    intervalIds.value.push(
+      setInterval(() => {
+        if (i >= notes.length) {
+          intervalIds.value.push(
+            setInterval(() => {
+              if (currNoteQueue.value.length) {
+                clearCurrentQueue()
+              }
+            }, 1000)
+          )
+        } else {
+          playNextNote()
+        }
+      }, 1000)
+    )
+  }
+
+  if (graphAudioType.value === 'chord') {
+    playChord()
+  } else if (graphAudioType.value === 'arpeggio') {
+    playArpeggio()
+  }
+}
+
+const changeGraphAudioType = (s: string) => {
+  graphAudioType.value = s
 }
 
 const updateDimensionsHandler = () => {
@@ -453,6 +484,7 @@ onUnmounted(() => {
     @focusHorizontal="focusPanel = 'horizontal'"
     @changeGraphText="changeGraphText"
     @useLocalOrFetchAndCreateDag="useLocalOrFetchAndCreateDag"
+    @changeGraphAudioType="changeGraphAudioType"
     :selectedSets="selectedSets"
     :textFieldFocused="textFieldFocused"
     :transposition="transposition"

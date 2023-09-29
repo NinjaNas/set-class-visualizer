@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import GraphAudioTypeButton from './GraphAudioTypeButton.vue'
 import LightDarkModeButton from './LightDarkModeButton.vue'
 import MIDIInButton from './MIDIInButton.vue'
 import MIDIOutButton from './MIDIOutButton.vue'
@@ -10,6 +11,7 @@ import SwitchDagButton from './SwitchDagButton.vue'
   <div class="options-container">
     <h2 class="col-span-2-option-header">Display</h2>
     <LightDarkModeButton></LightDarkModeButton>
+    <h2 class="col-span-2-option-header">Graph</h2>
     <PrimeForteButtonVue
       @changeGraphText="(d: string) => $emit('changeGraphText', d)"
     ></PrimeForteButtonVue>
@@ -17,6 +19,9 @@ import SwitchDagButton from './SwitchDagButton.vue'
       @useLocalOrFetchAndCreateDag="(d: string) => $emit('useLocalOrFetchAndCreateDag', d)"
     >
     </SwitchDagButton>
+    <GraphAudioTypeButton
+      @changeGraphAudioType="(d: string) => $emit('changeGraphAudioType', d)"
+    ></GraphAudioTypeButton>
     <h2 class="col-span-2-option-header">Midi</h2>
     <MIDIInButton @changeMidiIn="(d: string) => $emit('changeMidiIn', d)"></MIDIInButton>
     <MIDIOutButton @changeMidiOut="(d: string) => $emit('changeMidiOut', d)"></MIDIOutButton>

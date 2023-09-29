@@ -45,6 +45,7 @@ const changeMidiOut = (s: string) => {
       v-show="activeTab === 'options'"
       @changeGraphText="(d: string) => $emit('changeGraphText', d)"
       @useLocalOrFetchAndCreateDag="(d: string) => $emit('useLocalOrFetchAndCreateDag', d)"
+      @changeGraphAudioType="(d: string) => $emit('changeGraphAudioType', d)"
       @changeMidiIn="changeMidiIn"
       @changeMidiOut="changeMidiOut"
     ></OptionsTab>
