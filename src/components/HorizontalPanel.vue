@@ -12,6 +12,7 @@ const props = defineProps<{
 const activeTab = ref<string>('piano')
 const selectedMidiIn = ref<string>('')
 const selectedMidiOut = ref<string>('')
+const containerHeight = ref<number>(360)
 
 const changeMidiIn = (s: string) => {
   selectedMidiIn.value = s
@@ -20,35 +21,63 @@ const changeMidiIn = (s: string) => {
 const changeMidiOut = (s: string) => {
   selectedMidiOut.value = s
 }
+
+const resizeHandler = (event: MouseEvent) => {
+  const startY = event.clientY
+  const initialHeight = containerHeight.value
+  const handleMouseMove = (event: MouseEvent) => {
+    if (event.clientY > 10 && event.clientY < window.innerHeight - 10) {
+      const deltaY = event.clientY - startY
+      containerHeight.value = initialHeight - deltaY
+    }
+  }
+
+  const stopResizing = () => {
+    document.removeEventListener('mousemove', handleMouseMove)
+    document.removeEventListener('mouseup', stopResizing)
+  }
+
+  document.addEventListener('mousemove', handleMouseMove)
+  document.addEventListener('mouseup', stopResizing)
+}
 </script>
 
 <template>
-  <div class="horizontal-container" @click="$emit('focusHorizontal')">
-    <ul class="tabs">
-      <li @click="activeTab = 'piano'" :class="{ 'active-color': activeTab === 'piano' }">Piano</li>
-      <li @click="activeTab = 'compose'" :class="{ 'active-color': activeTab === 'compose' }">
-        Compose
-      </li>
-      <li @click="activeTab = 'options'" :class="{ 'active-color': activeTab === 'options' }">
-        Options
-      </li>
-    </ul>
-    <PianoTab
-      v-show="activeTab === 'piano'"
-      :selectedSets="props.selectedSets"
-      :textFieldFocused="textFieldFocused"
-      :transposition="transposition"
-      :selectedMidiIn="selectedMidiIn"
-      :selectedMidiOut="selectedMidiOut"
-    ></PianoTab>
-    <OptionsTab
-      v-show="activeTab === 'options'"
-      @changeGraphText="(d: string) => $emit('changeGraphText', d)"
-      @useLocalOrFetchAndCreateDag="(d: string) => $emit('useLocalOrFetchAndCreateDag', d)"
-      @changeGraphAudioType="(d: string) => $emit('changeGraphAudioType', d)"
-      @changeMidiIn="changeMidiIn"
-      @changeMidiOut="changeMidiOut"
-    ></OptionsTab>
+  <div
+    class="horizontal-container"
+    @click="$emit('focusHorizontal')"
+    :style="{ height: containerHeight + 'px' }"
+  >
+    <div class="horizontal-container-resize" @mousedown="resizeHandler"></div>
+    <div class="overflow-y-wrapper">
+      <ul class="tabs">
+        <li @click="activeTab = 'piano'" :class="{ 'active-color': activeTab === 'piano' }">
+          Piano
+        </li>
+        <li @click="activeTab = 'compose'" :class="{ 'active-color': activeTab === 'compose' }">
+          Compose
+        </li>
+        <li @click="activeTab = 'options'" :class="{ 'active-color': activeTab === 'options' }">
+          Options
+        </li>
+      </ul>
+      <PianoTab
+        v-show="activeTab === 'piano'"
+        :selectedSets="props.selectedSets"
+        :textFieldFocused="textFieldFocused"
+        :transposition="transposition"
+        :selectedMidiIn="selectedMidiIn"
+        :selectedMidiOut="selectedMidiOut"
+      ></PianoTab>
+      <OptionsTab
+        v-show="activeTab === 'options'"
+        @changeGraphText="(d: string) => $emit('changeGraphText', d)"
+        @useLocalOrFetchAndCreateDag="(d: string) => $emit('useLocalOrFetchAndCreateDag', d)"
+        @changeGraphAudioType="(d: string) => $emit('changeGraphAudioType', d)"
+        @changeMidiIn="changeMidiIn"
+        @changeMidiOut="changeMidiOut"
+      ></OptionsTab>
+    </div>
   </div>
 </template>
 
@@ -66,13 +95,28 @@ const changeMidiOut = (s: string) => {
   bottom: 0px;
   left: 0px;
   width: 100%;
-  height: 30%;
+  height: 360px;
   background: var(--color-background);
   color: var(--color-text);
   border: 2px;
   border-style: dashed none none none;
   border-color: var(--color-text);
+}
+
+/* so the resize can clip outside of the container */
+.overflow-y-wrapper {
   overflow-y: auto;
+  height: 100%;
+}
+
+.horizontal-container-resize {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: 0px;
+  width: 100%;
+  height: 10px;
+  cursor: n-resize;
 }
 
 span.inner {
