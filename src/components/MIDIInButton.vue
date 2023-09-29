@@ -13,6 +13,7 @@ const midiInArr = ref<
     version: string
   }[]
 >([])
+
 JZZ()
   .refresh()
   .and(() => {
