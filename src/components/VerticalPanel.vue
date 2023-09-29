@@ -1,11 +1,42 @@
 <script setup lang="ts">
 import { formatSetToString, transpose, toFormattedPrimeFormArray } from '@/functions/helpers'
 
+type DataSet = {
+  number: string
+  primeForm: string
+  vec: string
+  z: null | string
+  complement: null | string
+}[]
+
 const props = defineProps<{
   selectedSets: string[]
   isVerticalPanelOpen: boolean
   transposition: number
+  apiData: DataSet
 }>()
+
+const findSet = (s: string) => {
+  if (props.apiData.length) {
+    let foundData = props.apiData.find((e) => e.primeForm === props.selectedSets[0].split('|')[0])
+
+    if (foundData) {
+      switch (s) {
+        case 'vec':
+          return foundData.vec
+        case 'z':
+          if (foundData.z && foundData.z.endsWith('A')) {
+            return foundData.z + ', ' + foundData.z.slice(0, -1) + 'B'
+          }
+          return foundData.z
+        case 'complement':
+          return foundData.complement ? foundData.complement : 'Self'
+        default:
+          return foundData
+      }
+    }
+  }
+}
 </script>
 
 <template>
@@ -28,6 +59,18 @@ const props = defineProps<{
         <h1>Forte Number:</h1>
         <p class="h1-font">
           {{ formatSetToString(selectedSets[0], true) }}
+        </p>
+        <h1 v-show="findSet('vec')">Interval Vector:</h1>
+        <p class="h1-font" v-show="findSet('vec')">
+          {{ findSet('vec') }}
+        </p>
+        <h1 v-show="findSet('z')">Zygotic Sets:</h1>
+        <p class="h1-font" v-show="findSet('z')">
+          {{ findSet('z') }}
+        </p>
+        <h1>Complement:</h1>
+        <p class="h1-font">
+          {{ findSet('complement') }}
         </p>
       </div>
     </div>

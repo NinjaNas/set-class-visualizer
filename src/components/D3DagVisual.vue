@@ -26,6 +26,13 @@ type DagJSONObject = {
   links: { source: string; target: string; points: number[][]; data: Link[] }
   v: number
 }
+type DataSet = {
+  number: string
+  primeForm: string
+  vec: string
+  z: null | string
+  complement: null | string
+}[]
 
 const NODE_RADIUS = 50
 const ARROW_SIZE = (NODE_RADIUS * NODE_RADIUS) / 30.0
@@ -35,6 +42,8 @@ const MIN_SCALE = 0.1
 const MAX_SCALE = 30
 
 const abortController = new AbortController()
+const localData = localStorage.getItem('data')
+const apiData = ref<DataSet>(JSON.parse(localData ? localData : '[]'))
 const jsonData = ref<null | DagJSONObject>(null)
 const nodeData = ref<null | GNode[]>(null)
 const svgRef = ref<null | SVGElement>(null)
@@ -52,6 +61,27 @@ const selectedSets = ref<string[]>(['["0","1","2","3","4","5","6","7","8","9","T
 const currNoteQueue = ref<string[]>([])
 const intervalIds = ref<number[]>([])
 const graphAudioType = ref<string>('chord')
+
+const fetchData = async () => {
+  try {
+    const res = await fetch(
+      'https://hcda8f8dtk.execute-api.us-east-1.amazonaws.com/prod/api/data/',
+      { signal: abortController.signal }
+    )
+    if (res.ok) {
+      const dataRes: DataSet = await res.json()
+      localStorage.setItem('data', JSON.stringify(dataRes))
+      apiData.value = dataRes
+    } else {
+      console.log('Not 200', res)
+    }
+  } catch (error) {
+    if ((error as Error).name == 'AbortError') {
+      console.log('AbortError', error)
+    }
+    console.log(error)
+  }
+}
 
 const fetchDagData = async (url: string) => {
   try {
@@ -181,6 +211,12 @@ const createDag = async () => {
       prevSelectedSets.value = selectedSets.value
 
       selectedSets.value = getSelectedSets(d)
+
+      const data = localStorage.getItem('data')
+
+      if (!data || !apiData.value.length) {
+        fetchData()
+      }
 
       isVerticalPanelOpen.value = true
       if (!(graphAudioType.value === 'off')) {
@@ -495,6 +531,7 @@ onUnmounted(() => {
     :selectedSets="selectedSets"
     :transposition="transposition"
     :isVerticalPanelOpen="isVerticalPanelOpen"
+    :apiData="apiData"
     @closeModal="isVerticalPanelOpen = false"
   ></VerticalPanel>
 </template>
