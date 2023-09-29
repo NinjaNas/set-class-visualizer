@@ -12,7 +12,7 @@ const props = defineProps<{
 const activeTab = ref<string>('piano')
 const selectedMidiIn = ref<string>('')
 const selectedMidiOut = ref<string>('')
-const containerHeight = ref<number>(360)
+const containerHeight = ref<number>(310)
 
 const changeMidiIn = (s: string) => {
   selectedMidiIn.value = s
@@ -95,7 +95,7 @@ const resizeHandler = (event: MouseEvent) => {
   bottom: 0px;
   left: 0px;
   width: 100%;
-  height: 360px;
+  height: 310px;
   background: var(--color-background);
   color: var(--color-text);
   border: 2px;
