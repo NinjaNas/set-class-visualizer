@@ -482,6 +482,11 @@ const useLocalOrFetchAndCreateDag = async (dagStr: string) => {
   if (getGraphText) {
     changeGraphText(getGraphText)
   }
+
+  const getGraphAudioType = localStorage.getItem('graphAudioType')
+  if (getGraphAudioType) {
+    changeGraphText(getGraphAudioType)
+  }
 }
 
 onMounted(async () => {
