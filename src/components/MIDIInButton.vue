@@ -14,15 +14,19 @@ const midiInArr = ref<
   }[]
 >([])
 
-JZZ()
-  .and(() => {
-    midiInArr.value = JZZ().info().inputs
-  })
-  .or((err: any) => {
-    console.error('Failed to initialize JZZ:', err)
-  })
+const setMidiIn = () => {
+  JZZ()
+    .and(() => {
+      midiInArr.value = JZZ().info().inputs
+    })
+    .or((err: any) => {
+      console.error('Failed to initialize JZZ:', err)
+    })
+}
 
-if (midiIn.value === '') {
+setMidiIn()
+
+if (midiIn.value === '' || !midiInArr.value.some((e) => e.name === midiIn.value)) {
   JZZ()
     .openMidiIn()
     .and(function (this: any) {
@@ -40,7 +44,7 @@ watch(midiIn, () => {
 
 <template>
   <label for="midiInButton">Midi In:</label>
-  <select id="midiInButton" name="midiInButton" v-model="midiIn">
+  <select id="midiInButton" name="midiInButton" v-model="midiIn" @click="setMidiIn">
     <option v-for="label in midiInArr" :key="label.id" :value="label.id">
       {{ label.id }}
     </option>

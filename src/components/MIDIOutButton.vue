@@ -14,15 +14,19 @@ const midiOutArr = ref<
   }[]
 >([])
 
-JZZ()
-  .and(() => {
-    midiOutArr.value = JZZ().info().outputs
-  })
-  .or((err: any) => {
-    console.error('Failed to initialize JZZ:', err)
-  })
+const setMidiOut = () => {
+  JZZ()
+    .and(() => {
+      midiOutArr.value = JZZ().info().outputs
+    })
+    .or((err: any) => {
+      console.error('Failed to initialize JZZ:', err)
+    })
+}
 
-if (midiOut.value === '') {
+setMidiOut()
+
+if (midiOut.value === '' || !midiOutArr.value.some((e) => e.name === midiOut.value)) {
   JZZ()
     .openMidiOut()
     .and(function (this: any) {
