@@ -178,7 +178,7 @@ const setNotes = () => {
   const notesArr = toFormattedPrimeFormArray(props.selectedSets[0])
   let notesRet = []
   let complementRet = []
-  const standardFormArr = notesArr.map((e) => transpose(e, 0))
+  const standardFormArr = notesArr.map((e) => transpose(e, props.transposition))
   for (let i = 0; i <= 127; i++) {
     if (standardFormArr.includes((i % 12).toString())) {
       notesRet.push(i.toString())
@@ -294,7 +294,6 @@ onMounted(() => {
   watch(
     () => props.selectedMidiIn,
     () => {
-      console.log(props.selectedMidiIn)
       disconnectPiano()
       portIn.value.close()
       setPortIn(props.selectedMidiIn)
