@@ -52,7 +52,8 @@ const initPiano = () => {
   setPortIn(localMidiIn ? localMidiIn : props.selectedMidiIn)
   setPortOut(localMidiOut ? localMidiOut : props.selectedMidiOut)
   filter.value.connect(piano.value)
-  piano.value.connect(synth).connect(portOut.value)
+  piano.value.connect(portOut.value)
+  piano.value.connect(synth)
   ascii.value.connect(filter.value)
   portIn.value.connect(filter.value)
 }
@@ -120,7 +121,7 @@ const setAscii = () => {
 
 const connectPiano = () => {
   filter.value.connect(piano.value)
-  piano.value.connect(synth).connect(portOut.value)
+  piano.value.connect(portOut.value)
   ascii.value.connect(filter.value)
   portIn.value.connect(filter.value)
 }
@@ -128,7 +129,7 @@ const connectPiano = () => {
 const disconnectPiano = () => {
   portIn.value.disconnect(filter.value)
   ascii.value.disconnect(filter.value)
-  piano.value.disconnect(synth).disconnect(portOut.value)
+  piano.value.disconnect(portOut.value)
   filter.value.disconnect(piano.value)
 }
 
