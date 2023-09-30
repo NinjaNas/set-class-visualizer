@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { formatSetToString, transpose, toFormattedPrimeFormArray } from '@/functions/helpers'
-import { ref } from 'vue'
+import { nextTick, onMounted, ref, watch } from 'vue'
 
 type DataSet = {
   number: string
@@ -17,7 +17,8 @@ const props = defineProps<{
   apiData: DataSet
 }>()
 
-const containerWidth = ref<number>(580)
+const containerWidth = ref<null | number>(null)
+const container = ref<null | HTMLDivElement>(null)
 
 const findSet = (s: string) => {
   if (props.apiData.length) {
@@ -42,12 +43,17 @@ const findSet = (s: string) => {
 }
 
 const resizeHandler = (event: MouseEvent) => {
+  if (!container.value) return
+  if (!containerWidth.value) {
+    containerWidth.value = container.value.clientWidth
+  }
+
   const startX = event.clientX
-  const initialHeight = containerWidth.value
+  const initialWidth = containerWidth.value
   const handleMouseMove = (event: MouseEvent) => {
     if (event.clientX > 10 && event.clientX < window.innerWidth - 10) {
       const deltaX = event.clientX - startX
-      containerWidth.value = initialHeight - deltaX
+      containerWidth.value = initialWidth - deltaX
     }
   }
 
@@ -59,12 +65,26 @@ const resizeHandler = (event: MouseEvent) => {
   document.addEventListener('mousemove', handleMouseMove)
   document.addEventListener('mouseup', stopResizing)
 }
+onMounted(() => {
+  watch(
+    () => props.isVerticalPanelOpen,
+    async (isVerticalPanelOpen) => {
+      if (isVerticalPanelOpen) {
+        await nextTick() // wait for dom update because of v-show component will not be loaded
+        if (container.value) {
+          containerWidth.value = container.value.clientWidth
+        }
+      }
+    }
+  )
+})
 </script>
 
 <template>
   <transition name="fade">
     <div
-      v-if="isVerticalPanelOpen"
+      v-show="isVerticalPanelOpen"
+      ref="container"
       class="vertical-panel"
       @click="$emit('focusVertical')"
       :style="{ width: containerWidth + 'px' }"
@@ -112,13 +132,19 @@ const resizeHandler = (event: MouseEvent) => {
   position: fixed;
   top: 0;
   right: 0;
-  width: 580px;
+  width: 100%;
   height: 100%;
   background: var(--color-background);
   border: 2px;
   border-style: none none none dashed;
   border-color: var(--color-text);
   white-space: nowrap;
+}
+
+@media only screen and (min-width: 480px) {
+  .vertical-panel {
+    width: 580px;
+  }
 }
 
 /* so the resize can clip outside of the container */
