@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { nextTick, onMounted, ref, watch } from 'vue'
 import PianoTab from '../components/PianoTab.vue'
 import OptionsTab from '../components/OptionsTab.vue'
 
 const props = defineProps<{
+  isHorizontalPanelOpen: boolean
   selectedSets: string[]
   textFieldFocused: boolean
   transposition: number
@@ -12,7 +13,8 @@ const props = defineProps<{
 const activeTab = ref<string>('piano')
 const selectedMidiIn = ref<string>('')
 const selectedMidiOut = ref<string>('')
-const containerHeight = ref<number>(310)
+const container = ref<null | HTMLDivElement>(null)
+const containerHeight = ref<null | number>(null)
 
 const changeMidiIn = (s: string) => {
   selectedMidiIn.value = s
@@ -23,6 +25,11 @@ const changeMidiOut = (s: string) => {
 }
 
 const resizeHandler = (event: MouseEvent) => {
+  if (!container.value) return
+  if (!containerHeight.value) {
+    containerHeight.value = container.value.clientHeight
+  }
+
   const startY = event.clientY
   const initialHeight = containerHeight.value
   const handleMouseMove = (event: MouseEvent) => {
@@ -40,45 +47,64 @@ const resizeHandler = (event: MouseEvent) => {
   document.addEventListener('mousemove', handleMouseMove)
   document.addEventListener('mouseup', stopResizing)
 }
+
+onMounted(() => {
+  watch(
+    () => props.isHorizontalPanelOpen,
+    async (isHorizontalPanelOpen) => {
+      if (isHorizontalPanelOpen) {
+        await nextTick() // wait for dom update because of v-show component will not be loaded
+        if (container.value) {
+          containerHeight.value = container.value.clientHeight
+        }
+      }
+    }
+  )
+})
 </script>
 
 <template>
-  <div
-    class="horizontal-container"
-    @click="$emit('focusHorizontal')"
-    :style="{ height: containerHeight + 'px' }"
-  >
-    <div class="horizontal-container-resize" @mousedown="resizeHandler"></div>
-    <div class="overflow-y-wrapper">
-      <ul class="tabs">
-        <li @click="activeTab = 'piano'" :class="{ 'active-color': activeTab === 'piano' }">
-          Piano
-        </li>
-        <li @click="activeTab = 'compose'" :class="{ 'active-color': activeTab === 'compose' }">
-          Compose
-        </li>
-        <li @click="activeTab = 'options'" :class="{ 'active-color': activeTab === 'options' }">
-          Options
-        </li>
-      </ul>
-      <PianoTab
-        v-show="activeTab === 'piano'"
-        :selectedSets="props.selectedSets"
-        :textFieldFocused="textFieldFocused"
-        :transposition="transposition"
-        :selectedMidiIn="selectedMidiIn"
-        :selectedMidiOut="selectedMidiOut"
-      ></PianoTab>
-      <OptionsTab
-        v-show="activeTab === 'options'"
-        @changeGraphText="(d: string) => $emit('changeGraphText', d)"
-        @useLocalOrFetchAndCreateDag="(d: string) => $emit('useLocalOrFetchAndCreateDag', d)"
-        @changeGraphAudioType="(d: string) => $emit('changeGraphAudioType', d)"
-        @changeMidiIn="changeMidiIn"
-        @changeMidiOut="changeMidiOut"
-      ></OptionsTab>
+  <transition name="fadeup">
+    <div
+      v-show="isHorizontalPanelOpen"
+      class="horizontal-container"
+      @click="$emit('focusHorizontal')"
+      :style="{ height: containerHeight + 'px' }"
+      ref="container"
+    >
+      <div class="horizontal-container-resize" @mousedown="resizeHandler"></div>
+      <div class="overflow-y-wrapper">
+        <a @click="$emit('closeModal')" class="menuCloseHorizontal"></a>
+        <ul class="tabs">
+          <li @click="activeTab = 'piano'" :class="{ 'active-color': activeTab === 'piano' }">
+            Piano
+          </li>
+          <li @click="activeTab = 'compose'" :class="{ 'active-color': activeTab === 'compose' }">
+            Compose
+          </li>
+          <li @click="activeTab = 'options'" :class="{ 'active-color': activeTab === 'options' }">
+            Options
+          </li>
+        </ul>
+        <PianoTab
+          v-show="activeTab === 'piano'"
+          :selectedSets="props.selectedSets"
+          :textFieldFocused="textFieldFocused"
+          :transposition="transposition"
+          :selectedMidiIn="selectedMidiIn"
+          :selectedMidiOut="selectedMidiOut"
+        ></PianoTab>
+        <OptionsTab
+          v-show="activeTab === 'options'"
+          @changeGraphText="(d: string) => $emit('changeGraphText', d)"
+          @useLocalOrFetchAndCreateDag="(d: string) => $emit('useLocalOrFetchAndCreateDag', d)"
+          @changeGraphAudioType="(d: string) => $emit('changeGraphAudioType', d)"
+          @changeMidiIn="changeMidiIn"
+          @changeMidiOut="changeMidiOut"
+        ></OptionsTab>
+      </div>
     </div>
-  </div>
+  </transition>
 </template>
 
 <style>
@@ -95,7 +121,7 @@ const resizeHandler = (event: MouseEvent) => {
   bottom: 0px;
   left: 0px;
   width: 100%;
-  height: 310px;
+  height: 30%;
   background: var(--color-background);
   color: var(--color-text);
   border: 2px;
@@ -142,6 +168,18 @@ ul.tabs li:hover {
   background-color: var(--color-hover);
 }
 
+.menuCloseHorizontal:before {
+  display: flex;
+  align-items: center;
+  justify-content: end;
+  position: absolute;
+  top: 0;
+  right: 0;
+  content: '\00d7';
+  font-size: 1.5em;
+  padding-right: 0.5em;
+}
+
 @media only screen and (min-width: 480px) {
   .tabs {
     padding: 1% 0 0 1%;
@@ -150,5 +188,21 @@ ul.tabs li:hover {
   ul.tabs li {
     min-width: 100px;
   }
+  .menuCloseHorizontal:before {
+    font-size: 2.5em;
+  }
+  .horizontal-container {
+    height: 310px;
+  }
+}
+
+.fadeup-enter-active,
+.fadeup-leave-active {
+  transition: all 0.3s ease-out;
+}
+.fadeup-enter-from,
+.fadeup-leave-to {
+  transform: translateY(100%);
+  opacity: 0;
 }
 </style>

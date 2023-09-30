@@ -8,6 +8,7 @@ import {
 } from '@/functions/helpers'
 import VerticalPanel from './VerticalPanel.vue'
 import HorizontalPanel from './HorizontalPanel.vue'
+import HorizontalPanelOpenButton from './HorizontalPanelOpenButton.vue'
 import GraphPanel from './GraphPanel.vue'
 import * as d3 from 'd3'
 import { graphJson } from 'd3-dag'
@@ -52,6 +53,7 @@ const zoomRef = ref<number>(0.1)
 const transposition = ref<number>(0)
 const graphAudioOctave = ref<number>(4)
 const isVerticalPanelOpen = ref<boolean>(false)
+const isHorizontalPanelOpen = ref<boolean>(false)
 const focusPanel = ref<string>('horizontal')
 const textFieldFocused = ref<boolean>(false)
 
@@ -526,6 +528,8 @@ onUnmounted(() => {
     @changeGraphText="changeGraphText"
     @useLocalOrFetchAndCreateDag="useLocalOrFetchAndCreateDag"
     @changeGraphAudioType="changeGraphAudioType"
+    @closeModal="isHorizontalPanelOpen = false"
+    :isHorizontalPanelOpen="isHorizontalPanelOpen"
     :selectedSets="selectedSets"
     :textFieldFocused="textFieldFocused"
     :transposition="transposition"
@@ -539,6 +543,7 @@ onUnmounted(() => {
     :apiData="apiData"
     @closeModal="isVerticalPanelOpen = false"
   ></VerticalPanel>
+  <HorizontalPanelOpenButton @openModal="isHorizontalPanelOpen = true"></HorizontalPanelOpenButton>
 </template>
 
 <style>
