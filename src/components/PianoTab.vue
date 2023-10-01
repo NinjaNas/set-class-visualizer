@@ -22,7 +22,9 @@ const piano = ref<null | any>(null)
 const ascii = ref<null | any>(null)
 const portIn = ref<null | any>(null)
 const portOut = ref<null | any>(null)
-const program = ref<number>(0)
+const localProgram = localStorage.getItem('pianoAudioProgram')
+const localProgramNum = localProgram ? parseInt(localProgram) : 0 // even if localProgram == 0 returns false, it will still return 0
+const program = ref<number>(localProgramNum)
 const notes = ref<null | string[]>(null)
 const complement = ref<null | string[]>(null)
 const filter = ref<any>(JZZ.Widget())
@@ -125,6 +127,8 @@ const setAscii = () => {
 const connectPiano = () => {
   filter.value.connect(piano.value)
   piano.value.connect(portOut.value)
+  synth.program(0, program.value)
+  piano.value.connect(synth)
   ascii.value.connect(filter.value)
   portIn.value.connect(filter.value)
 }
@@ -132,8 +136,16 @@ const connectPiano = () => {
 const disconnectPiano = () => {
   portIn.value.disconnect(filter.value)
   ascii.value.disconnect(filter.value)
+  piano.value.disconnect(synth)
+  synthClear()
   piano.value.disconnect(portOut.value)
   filter.value.disconnect(piano.value)
+}
+
+const synthClear = () => {
+  for (let i = 0; i < 128; i++) {
+    synth.noteOff(0, i)
+  }
 }
 
 const enableKeypress = () => {
@@ -279,7 +291,6 @@ const keydownHandler = (e: KeyboardEvent) => {
 const changePianoAudioProgram = (s: string) => {
   program.value = parseInt(s)
   disconnectPiano()
-  synth.program(0, program.value)
   connectPiano()
 }
 
