@@ -6,6 +6,11 @@ const pianoAudioProgram = ref<string>(localAudioProgram ? localAudioProgram : '0
 
 const $emit = defineEmits(['changePianoAudioProgram'])
 
+const handleSelectChange = (e: Event) => {
+  const target = e.target as HTMLSelectElement
+  target.blur()
+}
+
 watch(pianoAudioProgram, () => {
   $emit('changePianoAudioProgram', pianoAudioProgram.value)
   localStorage.setItem('pianoAudioProgram', pianoAudioProgram.value)
@@ -14,7 +19,12 @@ watch(pianoAudioProgram, () => {
 
 <template>
   <label for="pianoAudioProgram">Patch:</label>
-  <select id="pianoAudioProgram" name="pianoAudioProgram" v-model="pianoAudioProgram">
+  <select
+    id="pianoAudioProgram"
+    name="pianoAudioProgram"
+    v-model="pianoAudioProgram"
+    @change="handleSelectChange"
+  >
     <option disabled>Piano</option>
     <option value="0">Acoustic Grand Piano</option>
     <option value="1">Bright Acoustic Piano</option>
