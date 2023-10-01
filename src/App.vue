@@ -19,10 +19,34 @@ const setTheme = () => {
 }
 
 const setGraphText = () => {
-  const storedDisplay = localStorage.getItem('graphText')
+  const storedValue = localStorage.getItem('graphText')
 
-  if (!storedDisplay) {
+  if (!storedValue) {
     localStorage.setItem('graphText', 'prime')
+  }
+}
+
+const setGraphAudioType = () => {
+  const storedValue = localStorage.getItem('graphAudioType')
+
+  if (!storedValue) {
+    localStorage.setItem('graphAudioType', 'chord')
+  }
+}
+
+const setGraphAudioProgram = () => {
+  const storedValue = localStorage.getItem('graphAudioProgram')
+
+  if (!storedValue) {
+    localStorage.setItem('graphAudioProgram', '0')
+  }
+}
+
+const setPianoAudioProgram = () => {
+  const storedValue = localStorage.getItem('pianoAudioProgram')
+
+  if (!storedValue) {
+    localStorage.setItem('pianoAudioProgram', '0')
   }
 }
 
@@ -30,6 +54,9 @@ onMounted(() => {
   window.addEventListener('wheel', preventCtrlZoom, { passive: false })
   setTheme()
   setGraphText()
+  setGraphAudioType()
+  setGraphAudioProgram()
+  setPianoAudioProgram()
 })
 
 onUnmounted(() => {
