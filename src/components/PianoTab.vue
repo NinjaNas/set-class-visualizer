@@ -4,6 +4,7 @@ import { JZZ } from 'jzz'
 import { Tiny } from 'jzz-synth-tiny'
 import { Kbd } from 'jzz-input-kbd'
 import { isBlackKey, toFormattedPrimeFormArray, toMidiNote, transpose } from '@/functions/helpers'
+import PianoProgramButton from './PianoProgramButton.vue'
 Tiny(JZZ)
 Kbd(JZZ)
 
@@ -21,6 +22,7 @@ const piano = ref<null | any>(null)
 const ascii = ref<null | any>(null)
 const portIn = ref<null | any>(null)
 const portOut = ref<null | any>(null)
+const program = ref<number>(0)
 const notes = ref<null | string[]>(null)
 const complement = ref<null | string[]>(null)
 const filter = ref<any>(JZZ.Widget())
@@ -53,6 +55,7 @@ const initPiano = () => {
   setPortOut(localMidiOut ? localMidiOut : props.selectedMidiOut)
   filter.value.connect(piano.value)
   piano.value.connect(portOut.value)
+  synth.program(0, program.value)
   piano.value.connect(synth)
   ascii.value.connect(filter.value)
   portIn.value.connect(filter.value)
@@ -273,6 +276,13 @@ const keydownHandler = (e: KeyboardEvent) => {
   }
 }
 
+const changePianoAudioProgram = (s: string) => {
+  program.value = parseInt(s)
+  disconnectPiano()
+  synth.program(0, program.value)
+  connectPiano()
+}
+
 onMounted(() => {
   initPiano()
   window.addEventListener('keydown', keydownHandler)
@@ -321,17 +331,24 @@ onUnmounted(() => {
 
 <template>
   <div class="piano-container">
-    <ul class="octave-switches">
-      <li
-        v-for="(label, index) in octaveSwitchLabels"
-        :key="index"
-        @click="changeOctave(index)"
-        :class="{ 'active-color': currOctave === index }"
-      >
-        {{ label }}
-      </li>
-    </ul>
-    <div class="piano" ref="pianoRef"></div>
+    <div></div>
+    <div class="piano-inner-grid-container">
+      <ul class="octave-switches">
+        <li
+          v-for="(label, index) in octaveSwitchLabels"
+          :key="index"
+          @click="changeOctave(index)"
+          :class="{ 'active-color': currOctave === index }"
+        >
+          {{ label }}
+        </li>
+      </ul>
+      <div class="piano" ref="pianoRef"></div>
+    </div>
+    <div class="piano-inner-grid-container audio-panel">
+      <h2 style="font-weight: bold; text-decoration: underline">Audio Panel</h2>
+      <PianoProgramButton @changePianoAudioProgram="changePianoAudioProgram"></PianoProgramButton>
+    </div>
   </div>
 </template>
 
@@ -339,14 +356,42 @@ onUnmounted(() => {
 .piano-container {
   display: grid;
   justify-content: center;
-  align-items: center;
+  align-items: start;
   grid-template-columns: min-content;
   grid-template-rows: 1fr;
-  gap: 5%;
+  gap: 1%;
 }
+
 .piano {
   min-width: 295px;
 }
+
+.piano-inner-grid-container {
+  display: grid;
+  justify-content: center;
+  align-items: center;
+  grid-template-rows: 1fr;
+  gap: 2%;
+}
+
+.audio-panel {
+  margin: 0 min-content 0 min-content;
+  padding: 2em;
+  border-radius: 10px;
+  border: 1px solid var(--color-accent);
+}
+
+@media only screen and (min-width: 1024px) {
+  .piano-container {
+    grid-template-columns: 1fr min-content 1fr;
+    grid-template-rows: 1fr;
+  }
+  .audio-panel {
+    margin: 0 30% 0 30%;
+    padding: 2em;
+  }
+}
+
 .octave-switches {
   display: grid;
   grid-template-columns: repeat(11, 1fr);
