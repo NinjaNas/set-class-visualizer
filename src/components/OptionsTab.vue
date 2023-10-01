@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import GraphAudioProgramButton from './GraphAudioProgramButton.vue'
 import GraphAudioTypeButton from './GraphAudioTypeButton.vue'
 import LightDarkModeButton from './LightDarkModeButton.vue'
 import MIDIInButton from './MIDIInButton.vue'
@@ -22,6 +23,9 @@ import SwitchDagButton from './SwitchDagButton.vue'
     <GraphAudioTypeButton
       @changeGraphAudioType="(d: string) => $emit('changeGraphAudioType', d)"
     ></GraphAudioTypeButton>
+    <GraphAudioProgramButton
+      @changeGraphAudioProgram="(d: string) => $emit('changeGraphAudioProgram', d)"
+    ></GraphAudioProgramButton>
     <h2 class="col-span-2-option-header">Midi</h2>
     <MIDIInButton @changeMidiIn="(d: string) => $emit('changeMidiIn', d)"></MIDIInButton>
     <MIDIOutButton @changeMidiOut="(d: string) => $emit('changeMidiOut', d)"></MIDIOutButton>

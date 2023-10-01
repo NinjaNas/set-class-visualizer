@@ -50,6 +50,7 @@ const nodeData = ref<null | GNode[]>(null)
 const svgRef = ref<null | SVGElement>(null)
 const graphSize = ref<{ width: number; height: number }>({ width: 0, height: 0 })
 const zoomRef = ref<number>(0.1)
+const program = ref<number>(0)
 const transposition = ref<number>(0)
 const graphAudioOctave = ref<number>(4)
 const isVerticalPanelOpen = ref<boolean>(false)
@@ -392,6 +393,8 @@ const playAudio = () => {
     clearCurrentQueue()
   }
 
+  synth.program(0, program.value)
+
   const playChord = () => {
     for (const n of notes) {
       const midiNote = toMidiNote(transpose(n, transposition.value), graphAudioOctave.value + 1)
@@ -450,6 +453,16 @@ const playAudio = () => {
 
 const changeGraphAudioType = (s: string) => {
   graphAudioType.value = s
+  if (currNoteQueue.value.length) {
+    clearCurrentQueue()
+  }
+}
+
+const changeGraphAudioProgram = (s: string) => {
+  program.value = parseInt(s)
+  if (currNoteQueue.value.length) {
+    clearCurrentQueue()
+  }
 }
 
 const updateDimensionsHandler = () => {
@@ -488,6 +501,11 @@ const useLocalOrFetchAndCreateDag = async (dagStr: string) => {
   const getGraphAudioType = localStorage.getItem('graphAudioType')
   if (getGraphAudioType) {
     changeGraphText(getGraphAudioType)
+  }
+
+  const getGraphAudioProgram = localStorage.getItem('graphAudioProgram')
+  if (getGraphAudioProgram) {
+    changeGraphText(getGraphAudioProgram)
   }
 }
 
@@ -528,6 +546,7 @@ onUnmounted(() => {
     @changeGraphText="changeGraphText"
     @useLocalOrFetchAndCreateDag="useLocalOrFetchAndCreateDag"
     @changeGraphAudioType="changeGraphAudioType"
+    @changeGraphAudioProgram="changeGraphAudioProgram"
     @closeModal="isHorizontalPanelOpen = false"
     :isHorizontalPanelOpen="isHorizontalPanelOpen"
     :selectedSets="selectedSets"

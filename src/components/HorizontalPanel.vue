@@ -99,6 +99,7 @@ onMounted(() => {
           @changeGraphText="(d: string) => $emit('changeGraphText', d)"
           @useLocalOrFetchAndCreateDag="(d: string) => $emit('useLocalOrFetchAndCreateDag', d)"
           @changeGraphAudioType="(d: string) => $emit('changeGraphAudioType', d)"
+          @changeGraphAudioProgram="(d: string) => $emit('changeGraphAudioProgram', d)"
           @changeMidiIn="changeMidiIn"
           @changeMidiOut="changeMidiOut"
         ></OptionsTab>
@@ -180,7 +181,7 @@ ul.tabs li:hover {
   padding-right: 0.5em;
 }
 
-@media only screen and (min-width: 480px) {
+@media only screen and (min-width: 1024px) {
   .tabs {
     padding: 1% 0 0 1%;
     justify-content: initial;
@@ -188,6 +189,9 @@ ul.tabs li:hover {
   ul.tabs li {
     min-width: 100px;
   }
+}
+
+@media only screen and (min-width: 480px) {
   .menuCloseHorizontal:before {
     font-size: 2.5em;
   }
