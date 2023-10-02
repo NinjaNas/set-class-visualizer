@@ -97,6 +97,7 @@ onMounted(() => {
         <OptionsTab
           v-show="activeTab === 'options'"
           @changeGraphText="(d: string) => $emit('changeGraphText', d)"
+          @changeVerticalPanelToggle="(d: boolean) => $emit('changeVerticalPanelToggle', d)"
           @useLocalOrFetchAndCreateDag="(d: string) => $emit('useLocalOrFetchAndCreateDag', d)"
           @changeGraphAudioType="(d: string) => $emit('changeGraphAudioType', d)"
           @changeGraphAudioProgram="(d: string) => $emit('changeGraphAudioProgram', d)"

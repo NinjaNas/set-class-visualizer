@@ -56,6 +56,7 @@ const program = ref<number>(localProgramNum)
 const transposition = ref<number>(0)
 const graphAudioOctave = ref<number>(4)
 const isVerticalPanelOpen = ref<boolean>(false)
+const verticalPanelToggle = ref<boolean>(true)
 const isHorizontalPanelOpen = ref<boolean>(false)
 const focusPanel = ref<string>('horizontal')
 const textFieldFocused = ref<boolean>(false)
@@ -223,7 +224,7 @@ const createDag = async () => {
         fetchData()
       }
 
-      isVerticalPanelOpen.value = true
+      isVerticalPanelOpen.value = true && verticalPanelToggle.value
       if (!(graphAudioType.value === 'off')) {
         playAudio()
       }
@@ -475,6 +476,13 @@ const changeGraphAudioProgram = (s: string) => {
   }
 }
 
+const changeVerticalPanelToggle = (b: boolean) => {
+  verticalPanelToggle.value = b
+  if (isVerticalPanelOpen.value) {
+    isVerticalPanelOpen.value = false
+  }
+}
+
 const updateDimensionsHandler = () => {
   d3.select(svgRef.value).attr('width', window.innerWidth).attr('height', window.innerHeight)
 }
@@ -555,6 +563,7 @@ onUnmounted(() => {
     @useLocalOrFetchAndCreateDag="useLocalOrFetchAndCreateDag"
     @changeGraphAudioType="changeGraphAudioType"
     @changeGraphAudioProgram="changeGraphAudioProgram"
+    @changeVerticalPanelToggle="changeVerticalPanelToggle"
     @closeModal="isHorizontalPanelOpen = false"
     :isHorizontalPanelOpen="isHorizontalPanelOpen"
     :selectedSets="selectedSets"

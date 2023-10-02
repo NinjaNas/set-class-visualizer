@@ -58,6 +58,14 @@ const setMidiChannel = () => {
   }
 }
 
+const setVerticalPanel = () => {
+  const storedValue = localStorage.getItem('sidebar')
+
+  if (!storedValue) {
+    localStorage.setItem('sidebar', 'on')
+  }
+}
+
 onMounted(() => {
   window.addEventListener('wheel', preventCtrlZoom, { passive: false })
   setTheme()
@@ -66,6 +74,7 @@ onMounted(() => {
   setGraphAudioProgram()
   setPianoAudioProgram()
   setMidiChannel()
+  setVerticalPanel()
 })
 
 onUnmounted(() => {
