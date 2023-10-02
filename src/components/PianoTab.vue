@@ -309,6 +309,7 @@ const changeMidiChannel = (s: string) => {
   setPiano(midiChannel.value)
   setAscii(midiChannel.value)
   connectPiano()
+  limitNotes()
 }
 
 onMounted(() => {
