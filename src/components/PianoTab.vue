@@ -5,6 +5,7 @@ import { Tiny } from 'jzz-synth-tiny'
 import { Kbd } from 'jzz-input-kbd'
 import { isBlackKey, toFormattedPrimeFormArray, toMidiNote, transpose } from '@/functions/helpers'
 import PianoProgramButton from './PianoProgramButton.vue'
+import SwitchMidiButton from './SwitchMidiButton.vue'
 Tiny(JZZ)
 Kbd(JZZ)
 
@@ -30,6 +31,9 @@ const complement = ref<null | string[]>(null)
 const filter = ref<any>(JZZ.Widget())
 const pianoRef = ref<null | HTMLDivElement>(null)
 const currOctave = ref<number>(5)
+const localMidiChannel = localStorage.getItem('midiChannel')
+const localMidiChannelNum = localMidiChannel ? parseInt(localMidiChannel) : 0 // even if localMidiChannel == 0 returns false, it will still return 0
+const midiChannel = ref<number>(localMidiChannelNum)
 
 const octaveSwitchLabels = [
   '-1 (1)',
@@ -49,31 +53,33 @@ const baseKeys = ['A', 'W', 'S', 'E', 'D', 'F', 'T', 'G']
 const extendedKeys = ['Y', 'H', 'U', 'J']
 
 const initPiano = () => {
-  setPiano()
-  setAscii()
+  setPiano(midiChannel.value)
+  setAscii(midiChannel.value)
   const localMidiIn = localStorage.getItem('midiIn')
   const localMidiOut = localStorage.getItem('midiOut')
   setPortIn(localMidiIn ? localMidiIn : props.selectedMidiIn)
   setPortOut(localMidiOut ? localMidiOut : props.selectedMidiOut)
-  filter.value.connect(piano.value)
-  piano.value.connect(portOut.value)
-  synth.program(0, program.value)
-  piano.value.connect(synth)
-  ascii.value.connect(filter.value)
-  portIn.value.connect(filter.value)
+  connectPiano()
 }
 
-const setPiano = () => {
+const setPiano = (chan: number = 0) => {
   piano.value = JZZ.input.Kbd({
     at: pianoRef.value,
     from: toMidiNote('0', currOctave.value),
+    chan,
     to:
       currOctave.value !== 10
         ? toMidiNote('11', currOctave.value)
         : toMidiNote('7', currOctave.value),
     onCreate: function () {
-      this.getBlackKeys().setStyle({ color: 'var(--offwhite)' })
-      this.getWhiteKeys().setStyle({ color: 'var(--offblack)' })
+      this.getBlackKeys().setStyle(
+        { color: 'var(--offwhite)', backgroundColor: 'var(--offblack)' },
+        { backgroundColor: '#888' }
+      )
+      this.getWhiteKeys().setStyle(
+        { color: 'var(--offblack)', backgroundColor: 'var(--offwhite)' },
+        { backgroundColor: '#aaa' }
+      )
 
       baseKeys.forEach((key, index) => {
         this.getKey(toMidiNote(index.toString(), currOctave.value)).setInnerHTML(
@@ -108,8 +114,11 @@ const setPortOut = (s: string = '') => {
   }
 }
 
-const setAscii = () => {
-  const keys: { [key: string]: string | null | HTMLDivElement } = { at: pianoRef.value }
+const setAscii = (chan: number = 0) => {
+  const keys: { [key: string]: number | string | null | HTMLDivElement } = {
+    at: pianoRef.value,
+    chan
+  }
 
   baseKeys.forEach((key, index) => {
     keys[key] = toMidiNote(index.toString(), currOctave.value)
@@ -150,7 +159,7 @@ const synthClear = () => {
 
 const enableKeypress = () => {
   disconnectPiano()
-  setAscii()
+  setAscii(midiChannel.value)
   filter.value = JZZ.Widget()
   connectPiano()
   changeFilter()
@@ -182,8 +191,8 @@ const changeOctave = (octave: number) => {
 
   currOctave.value = octave
 
-  setPiano()
-  setAscii()
+  setPiano(midiChannel.value)
+  setAscii(midiChannel.value)
 
   connectPiano()
 
@@ -215,9 +224,9 @@ const limitNotes = () => {
 
   const styles = {
     disableKey: { backgroundColor: 'red', transition: 'background-color .5s ease-in-out' },
-    enableBlackKey: { backgroundColor: '#303030', transition: 'none' },
+    enableBlackKey: { backgroundColor: 'var(--offblack)', transition: 'none' },
     enableBlackKeyPressed: { backgroundColor: '#888', transition: 'none' },
-    enableWhiteKey: { backgroundColor: '#fffff2', transition: 'none' },
+    enableWhiteKey: { backgroundColor: 'var(--offwhite)', transition: 'none' },
     enableWhiteKeyPressed: { backgroundColor: '#aaa', transition: 'none' }
   }
 
@@ -294,6 +303,14 @@ const changePianoAudioProgram = (s: string) => {
   connectPiano()
 }
 
+const changeMidiChannel = (s: string) => {
+  midiChannel.value = parseInt(s)
+  disconnectPiano()
+  setPiano(midiChannel.value)
+  setAscii(midiChannel.value)
+  connectPiano()
+}
+
 onMounted(() => {
   initPiano()
   window.addEventListener('keydown', keydownHandler)
@@ -358,7 +375,11 @@ onUnmounted(() => {
     </div>
     <div class="piano-inner-grid-container audio-panel">
       <h2 style="font-weight: bold; text-decoration: underline">Audio Panel</h2>
-      <PianoProgramButton @changePianoAudioProgram="changePianoAudioProgram"></PianoProgramButton>
+      <SwitchMidiButton @changeMidiChannel="changeMidiChannel"></SwitchMidiButton>
+      <PianoProgramButton
+        v-if="midiChannel === 0"
+        @changePianoAudioProgram="changePianoAudioProgram"
+      ></PianoProgramButton>
     </div>
   </div>
 </template>

@@ -50,6 +50,14 @@ const setPianoAudioProgram = () => {
   }
 }
 
+const setMidiChannel = () => {
+  const storedValue = localStorage.getItem('midiChannel')
+
+  if (!storedValue) {
+    localStorage.setItem('midiChannel', '0')
+  }
+}
+
 onMounted(() => {
   window.addEventListener('wheel', preventCtrlZoom, { passive: false })
   setTheme()
@@ -57,6 +65,7 @@ onMounted(() => {
   setGraphAudioType()
   setGraphAudioProgram()
   setPianoAudioProgram()
+  setMidiChannel()
 })
 
 onUnmounted(() => {
