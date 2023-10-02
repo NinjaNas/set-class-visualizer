@@ -272,6 +272,14 @@ const createDag = async () => {
   svg
     .call(zoom)
     .call(zoom.transform, d3.zoomIdentity.translate(-centerX, -centerY).scale(MIN_SCALE))
+
+  // init highlight or reset highlight after graph change
+  for (const d of dag.nodes()) {
+    if (d.data === selectedSets.value[0]) {
+      selectedSets.value = getSelectedSets(d)
+      addCurrHighlight(getSelectedSets(d))
+    }
+  }
 }
 
 const calcCenter = (scale: number) => {
@@ -489,8 +497,6 @@ const useLocalOrFetchAndCreateDag = async (dagStr: string) => {
   } else {
     await fetchDagData(dagStr)
   }
-
-  selectedSets.value = ['["0","1","2","3","4","5","6","7","8","9","T","E"]|12-1'] // reset to full set
 
   svgRef.value.innerHTML = '' // clear old dag if it exists
   createDag()
