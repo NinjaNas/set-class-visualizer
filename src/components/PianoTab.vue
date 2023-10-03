@@ -6,6 +6,7 @@ import { Kbd } from 'jzz-input-kbd'
 import { isBlackKey, toFormattedPrimeFormArray, toMidiNote, transpose } from '@/functions/helpers'
 import PianoProgramButton from './PianoProgramButton.vue'
 import SwitchMidiButton from './SwitchMidiButton.vue'
+import PianoVelocitySlider from './PianoVelocitySlider.vue'
 Tiny(JZZ)
 Kbd(JZZ)
 
@@ -26,9 +27,19 @@ const portOut = ref<null | any>(null)
 const localProgram = localStorage.getItem('pianoAudioProgram')
 const localProgramNum = localProgram ? parseInt(localProgram) : 0 // even if localProgram == 0 returns false, it will still return 0
 const program = ref<number>(localProgramNum)
+const localVel = localStorage.getItem('pianoVelocity')
+const localVelNum = localVel ? parseInt(localVel) : localVel === '0' ? 0 : 60
+const vel = ref<number>(localVelNum)
 const notes = ref<null | string[]>(null)
 const complement = ref<null | string[]>(null)
-const filter = ref<any>(JZZ.Widget())
+const filter = ref<any>(
+  JZZ.Widget({
+    _receive: function (msg: any) {
+      msg[2] = vel.value
+      this._emit(msg)
+    }
+  })
+)
 const pianoRef = ref<null | HTMLDivElement>(null)
 const currOctave = ref<number>(5)
 const localMidiChannel = localStorage.getItem('midiChannel')
@@ -160,7 +171,12 @@ const synthClear = () => {
 const enableKeypress = () => {
   disconnectPiano()
   setAscii(midiChannel.value)
-  filter.value = JZZ.Widget()
+  filter.value = JZZ.Widget({
+    _receive: function (msg: any) {
+      msg[2] = vel.value
+      this._emit(msg)
+    }
+  })
   connectPiano()
   changeFilter()
 }
@@ -177,6 +193,7 @@ const changeFilter = () => {
   disconnectPiano()
   filter.value = JZZ.Widget({
     _receive: function (msg: any) {
+      msg[2] = vel.value
       // emit if note in array
       if (notes.value!.includes(msg[1].toString())) {
         this._emit(msg)
@@ -312,6 +329,10 @@ const changeMidiChannel = (s: string) => {
   limitNotes()
 }
 
+const changePianoVel = (s: string) => {
+  vel.value = parseInt(s)
+}
+
 onMounted(() => {
   initPiano()
   window.addEventListener('keydown', keydownHandler)
@@ -381,6 +402,7 @@ onUnmounted(() => {
         v-if="midiChannel === 0"
         @changePianoAudioProgram="changePianoAudioProgram"
       ></PianoProgramButton>
+      <PianoVelocitySlider @changePianoVel="changePianoVel"></PianoVelocitySlider>
     </div>
   </div>
 </template>

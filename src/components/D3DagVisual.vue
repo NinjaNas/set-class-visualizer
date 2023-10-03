@@ -53,6 +53,9 @@ const zoomRef = ref<number>(0.1)
 const localProgram = localStorage.getItem('graphAudioProgram')
 const localProgramNum = localProgram ? parseInt(localProgram) : 0 // even if localProgram == 0 returns false, it will still return 0
 const program = ref<number>(localProgramNum)
+const localGraphVel = localStorage.getItem('graphVel')
+const localGraphVelNum = localGraphVel ? parseInt(localGraphVel) : localGraphVel === '0' ? 0 : 60 // even if localProgram == 0 returns false, it will still return 0
+const graphVel = ref<number>(localGraphVelNum)
 const transposition = ref<number>(0)
 const graphAudioOctave = ref<number>(4)
 const isVerticalPanelOpen = ref<boolean>(false)
@@ -409,7 +412,7 @@ const playAudio = () => {
   const playChord = () => {
     for (const n of notes) {
       const midiNote = toMidiNote(transpose(n, transposition.value), graphAudioOctave.value + 1)
-      synth.noteOn(0, midiNote, 60)
+      synth.noteOn(0, midiNote, graphVel.value)
       currNoteQueue.value.push(midiNote)
     }
 
@@ -431,7 +434,7 @@ const playAudio = () => {
         transpose(notes[i], transposition.value),
         graphAudioOctave.value + 1
       )
-      synth.noteOn(0, midiNote, 60)
+      synth.noteOn(0, midiNote, graphVel.value)
       currNoteQueue.value.push(midiNote)
       i++
     }
@@ -481,6 +484,10 @@ const changeVerticalPanelToggle = (b: boolean) => {
   if (isVerticalPanelOpen.value) {
     isVerticalPanelOpen.value = false
   }
+}
+
+const changeGraphVel = (s: string) => {
+  graphVel.value = parseInt(s)
 }
 
 const updateDimensionsHandler = () => {
@@ -564,6 +571,7 @@ onUnmounted(() => {
     @changeGraphAudioType="changeGraphAudioType"
     @changeGraphAudioProgram="changeGraphAudioProgram"
     @changeVerticalPanelToggle="changeVerticalPanelToggle"
+    @changeGraphVel="changeGraphVel"
     @closeModal="isHorizontalPanelOpen = false"
     :isHorizontalPanelOpen="isHorizontalPanelOpen"
     :selectedSets="selectedSets"

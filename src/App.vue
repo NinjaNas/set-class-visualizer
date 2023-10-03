@@ -66,6 +66,22 @@ const setVerticalPanel = () => {
   }
 }
 
+const setPianoVel = () => {
+  const storedValue = localStorage.getItem('pianoVelocity')
+
+  if (!storedValue) {
+    localStorage.setItem('pianoVelocity', '60')
+  }
+}
+
+const setGraphVel = () => {
+  const storedValue = localStorage.getItem('graphVelocity')
+
+  if (!storedValue) {
+    localStorage.setItem('graphVelocity', '60')
+  }
+}
+
 onMounted(() => {
   window.addEventListener('wheel', preventCtrlZoom, { passive: false })
   setTheme()
@@ -75,6 +91,8 @@ onMounted(() => {
   setPianoAudioProgram()
   setMidiChannel()
   setVerticalPanel()
+  setPianoVel()
+  setGraphVel()
 })
 
 onUnmounted(() => {

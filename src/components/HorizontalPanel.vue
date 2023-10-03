@@ -101,6 +101,7 @@ onMounted(() => {
           @useLocalOrFetchAndCreateDag="(d: string) => $emit('useLocalOrFetchAndCreateDag', d)"
           @changeGraphAudioType="(d: string) => $emit('changeGraphAudioType', d)"
           @changeGraphAudioProgram="(d: string) => $emit('changeGraphAudioProgram', d)"
+          @changeGraphVel="(d: string) => $emit('changeGraphVel', d)"
           @changeMidiIn="changeMidiIn"
           @changeMidiOut="changeMidiOut"
         ></OptionsTab>
