@@ -198,7 +198,7 @@ ul.tabs li:hover {
     font-size: 2.5em;
   }
   .horizontal-container {
-    height: 310px;
+    height: 400px;
   }
 }
 
