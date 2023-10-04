@@ -146,9 +146,10 @@ const setAscii = (chan: number = 0) => {
 
 const connectPiano = () => {
   filter.value.connect(piano.value)
+  filter.value.connect(synth)
   piano.value.connect(portOut.value)
   synth.program(0, program.value)
-  piano.value.connect(synth)
+  piano.value.connect(filter.value)
   ascii.value.connect(filter.value)
   portIn.value.connect(filter.value)
 }
@@ -156,9 +157,10 @@ const connectPiano = () => {
 const disconnectPiano = () => {
   portIn.value.disconnect(filter.value)
   ascii.value.disconnect(filter.value)
-  piano.value.disconnect(synth)
+  piano.value.disconnect(filter.value)
   synthClear()
   piano.value.disconnect(portOut.value)
+  filter.value.disconnect(synth)
   filter.value.disconnect(piano.value)
 }
 
