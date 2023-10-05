@@ -7,6 +7,7 @@ import { isBlackKey, toFormattedPrimeFormArray, toMidiNote, transpose } from '@/
 import PianoProgramButton from './PianoProgramButton.vue'
 import SwitchMidiButton from './SwitchMidiButton.vue'
 import PianoVelocitySlider from './PianoVelocitySlider.vue'
+import PlayPanel from './PlayPanel.vue'
 Tiny(JZZ)
 Kbd(JZZ)
 
@@ -16,6 +17,8 @@ const props = defineProps<{
   transposition: number
   selectedMidiIn: string
   selectedMidiOut: string
+  isPlaying: string
+  isLooping: boolean
 }>()
 
 const synth = JZZ.synth.Tiny()
@@ -398,7 +401,13 @@ onUnmounted(() => {
       <div class="piano" ref="pianoRef"></div>
     </div>
     <div class="piano-inner-grid-container audio-panel">
-      <h2 style="font-weight: bold; text-decoration: underline">Audio Panel</h2>
+      <h2 style="font-weight: bold; text-decoration: underline; padding: 0">Audio Panel</h2>
+      <PlayPanel
+        :isPlaying="isPlaying"
+        :isLooping="isLooping"
+        @changeIsPlaying="(s: string) => $emit('changeIsPlaying', s)"
+        @changeIsLooping="(d: boolean) => $emit('changeIsLooping', d)"
+      ></PlayPanel>
       <SwitchMidiButton @changeMidiChannel="changeMidiChannel"></SwitchMidiButton>
       <PianoProgramButton
         v-if="midiChannel === 0"
@@ -428,12 +437,12 @@ onUnmounted(() => {
   justify-content: center;
   align-items: center;
   grid-template-rows: 1fr;
-  gap: 2%;
+  gap: 3px;
 }
 
 .audio-panel {
   margin: 0 min-content 0 min-content;
-  padding: 2em;
+  padding: 1em;
   border-radius: 10px;
   border: 1px solid var(--color-accent);
 }
@@ -445,7 +454,6 @@ onUnmounted(() => {
   }
   .audio-panel {
     margin: 0 30% 0 30%;
-    padding: 2em;
   }
 }
 

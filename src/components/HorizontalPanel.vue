@@ -2,6 +2,7 @@
 import { nextTick, onMounted, ref, watch } from 'vue'
 import PianoTab from '../components/PianoTab.vue'
 import OptionsTab from '../components/OptionsTab.vue'
+import ComposeInput from './ComposeInput.vue'
 
 const props = defineProps<{
   isHorizontalPanelOpen: boolean
@@ -15,6 +16,9 @@ const selectedMidiIn = ref<string>('')
 const selectedMidiOut = ref<string>('')
 const container = ref<null | HTMLDivElement>(null)
 const containerHeight = ref<null | number>(null)
+const isPlaying = ref<string>('false')
+const isPaused = ref<boolean>(false)
+const isLooping = ref<boolean>(false)
 
 const changeMidiIn = (s: string) => {
   selectedMidiIn.value = s
@@ -22,6 +26,14 @@ const changeMidiIn = (s: string) => {
 
 const changeMidiOut = (s: string) => {
   selectedMidiOut.value = s
+}
+
+const changeIsPlaying = (s: string) => {
+  isPlaying.value = s
+}
+
+const changeIsLooping = (b: boolean) => {
+  isLooping.value = b
 }
 
 const resizeHandler = (event: MouseEvent) => {
@@ -93,7 +105,18 @@ onMounted(() => {
           :transposition="transposition"
           :selectedMidiIn="selectedMidiIn"
           :selectedMidiOut="selectedMidiOut"
+          :isPlaying="isPlaying"
+          :isLooping="isLooping"
+          :isPaused="isPaused"
+          @changeIsPlaying="changeIsPlaying"
+          @changeIsLooping="changeIsLooping"
         ></PianoTab>
+        <ComposeInput
+          v-show="activeTab === 'compose'"
+          :isPlaying="isPlaying"
+          :isLooping="isLooping"
+          @changeIsPlaying="changeIsPlaying"
+        ></ComposeInput>
         <OptionsTab
           v-show="activeTab === 'options'"
           @changeGraphText="(d: string) => $emit('changeGraphText', d)"
