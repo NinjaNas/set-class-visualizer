@@ -12,3 +12,7 @@ declare module 'jzz-synth-tiny' {
 declare module 'jzz-input-kbd' {
   export const Kbd: any
 }
+
+declare module 'jzz-midi-smf' {
+  export const SMF: any
+}
