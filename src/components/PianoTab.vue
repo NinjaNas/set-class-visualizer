@@ -19,6 +19,9 @@ const props = defineProps<{
   selectedMidiOut: string
   isPlaying: string
   isLooping: boolean
+  isMidiLoaded: boolean
+  position: number
+  duration: number
 }>()
 
 const synth = JZZ.synth.Tiny()
@@ -405,8 +408,13 @@ onUnmounted(() => {
       <PlayPanel
         :isPlaying="isPlaying"
         :isLooping="isLooping"
+        :isMidiLoaded="isMidiLoaded"
+        :position="position"
+        :duration="duration"
         @changeIsPlaying="(s: string) => $emit('changeIsPlaying', s)"
         @changeIsLooping="(d: boolean) => $emit('changeIsLooping', d)"
+        @jumpPosition="(n: number) => $emit('jumpPosition', n)"
+        @changePositionText="(n: number) => $emit('changePositionText', n)"
       ></PlayPanel>
       <SwitchMidiButton @changeMidiChannel="changeMidiChannel"></SwitchMidiButton>
       <PianoProgramButton

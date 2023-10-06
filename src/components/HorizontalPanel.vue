@@ -16,9 +16,14 @@ const selectedMidiIn = ref<string>('')
 const selectedMidiOut = ref<string>('')
 const container = ref<null | HTMLDivElement>(null)
 const containerHeight = ref<null | number>(null)
+const isMidiLoaded = ref<boolean>(false)
 const isPlaying = ref<string>('false')
 const isPaused = ref<boolean>(false)
 const isLooping = ref<boolean>(false)
+const positionId = ref<number[]>([])
+const position = ref<number>(0)
+const duration = ref<number>(0)
+const player = ref<null | any>(null)
 
 const changeMidiIn = (s: string) => {
   selectedMidiIn.value = s
@@ -34,6 +39,44 @@ const changeIsPlaying = (s: string) => {
 
 const changeIsLooping = (b: boolean) => {
   isLooping.value = b
+}
+
+const changeMidiLoaded = (b: boolean) => {
+  isMidiLoaded.value = b
+}
+
+const changePlayer = (a: any) => {
+  player.value = a
+  position.value = player.value.positionMS()
+  duration.value = player.value.durationMS()
+}
+
+const changePosition = () => {
+  positionId.value.push(
+    setInterval(() => {
+      position.value = player.value.positionMS()
+    }, 100)
+  )
+  duration.value = player.value.durationMS()
+}
+
+const changeStopPosition = () => {
+  position.value = player.value.positionMS()
+  if (positionId.value.length) {
+    positionId.value.forEach((e: number) => {
+      clearInterval(e)
+    })
+    positionId.value = []
+  }
+}
+
+const jumpPosition = (n: number) => {
+  player.value.jump(player.value.ms2tick(n))
+  position.value = n
+}
+
+const changePositionText = (n: number) => {
+  position.value = n
 }
 
 const resizeHandler = (event: MouseEvent) => {
@@ -108,14 +151,23 @@ onMounted(() => {
           :isPlaying="isPlaying"
           :isLooping="isLooping"
           :isPaused="isPaused"
+          :position="position"
+          :duration="duration"
+          :isMidiLoaded="isMidiLoaded"
           @changeIsPlaying="changeIsPlaying"
           @changeIsLooping="changeIsLooping"
+          @jumpPosition="jumpPosition"
+          @changePositionText="changePositionText"
         ></PianoTab>
         <ComposeInput
           v-show="activeTab === 'compose'"
           :isPlaying="isPlaying"
           :isLooping="isLooping"
           @changeIsPlaying="changeIsPlaying"
+          @changeMidiLoaded="changeMidiLoaded"
+          @changePosition="changePosition"
+          @changeStopPosition="changeStopPosition"
+          @changePlayer="changePlayer"
         ></ComposeInput>
         <OptionsTab
           v-show="activeTab === 'options'"

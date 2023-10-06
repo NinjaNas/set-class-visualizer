@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { watch } from 'vue'
-
+import { ref, watch } from 'vue'
 import { JZZ } from 'jzz'
 import { Tiny } from 'jzz-synth-tiny'
 import { SMF } from 'jzz-midi-smf'
@@ -12,14 +11,22 @@ const props = defineProps<{
   isLooping: boolean
 }>()
 
-const $emit = defineEmits(['changeIsPlaying'])
+const $emit = defineEmits([
+  'changeIsPlaying',
+  'changeMidiLoaded',
+  'changePosition',
+  'changeStopPosition',
+  'changePlayer'
+])
 
 let synth = JZZ.synth.Tiny()
-let player: any
+const player = ref<null | any>(null)
 
 const loadPlayer = (data: string) => {
-  player = JZZ.MIDI.SMF(data).player()
-  player.connect(synth)
+  player.value = JZZ.MIDI.SMF(data).player()
+  player.value.connect(synth)
+  $emit('changeMidiLoaded', true)
+  $emit('changePlayer', player.value)
 }
 
 const loadMidi = (input: Event) => {
@@ -48,17 +55,21 @@ watch(
   () => {
     switch (props.isPlaying) {
       case 'false':
-        player.stop()
+        player.value.stop()
+        $emit('changeStopPosition')
         break
       case 'pause':
-        player.pause()
+        player.value.pause()
+        $emit('changeStopPosition')
         break
       case 'resume':
-        player.resume()
+        player.value.resume()
+        $emit('changePosition')
         break
       case 'true':
-        player.play()
-        player.onEnd = function () {
+        player.value.resume()
+        $emit('changePosition')
+        player.value.onEnd = function () {
           if (!props.isLooping) {
             $emit('changeIsPlaying', 'false')
           }
@@ -71,13 +82,18 @@ watch(
 watch(
   () => props.isLooping,
   () => {
-    player.loop(props.isLooping)
+    player.value.loop(props.isLooping)
   }
 )
 </script>
 
 <template>
-  <input @change="loadMidi" type="file" accept=".mid" />
+  <input class="compose-container" @change="loadMidi" type="file" accept=".mid" />
 </template>
 
-<style></style>
+<style>
+.compose-container {
+  display: grid;
+  padding: 1% 0 0 1%;
+}
+</style>
