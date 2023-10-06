@@ -2,7 +2,7 @@
 import { JZZ } from 'jzz'
 import { Tiny } from 'jzz-synth-tiny'
 import { SMF } from 'jzz-midi-smf'
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 Tiny(JZZ)
 SMF(JZZ)
 
@@ -14,6 +14,7 @@ const props = defineProps<{
   duration: number
 }>()
 
+const isSliderInput = ref<boolean>(false)
 const range = ref<number>(props.position)
 
 const $emit = defineEmits([
@@ -40,6 +41,15 @@ const playButtonHandler = () => {
       break
   }
 }
+
+watch(
+  () => props.position,
+  () => {
+    if (!isSliderInput.value) {
+      range.value = props.position
+    }
+  }
+)
 </script>
 
 <template>
@@ -85,11 +95,11 @@ const playButtonHandler = () => {
     </div>
     <label for="duration" style="text-align: end"
       >{{
-        Math.floor(position / 1000 / 60)
+        Math.floor((isSliderInput ? range : position) / 1000 / 60)
           .toString()
           .padStart(2, '0')
       }}:{{
-        Math.floor((position / 1000) % 60)
+        Math.floor(((isSliderInput ? range : position) / 1000) % 60)
           .toString()
           .padStart(2, '0')
       }}/{{
@@ -108,10 +118,21 @@ const playButtonHandler = () => {
     min="0"
     :max="duration"
     class="slider"
-    :value="position"
+    :value="range"
     :v-model="range"
-    @input="(e) => $emit('changePositionText', parseInt((e.target as HTMLInputElement).value))"
-    @mouseup="(e) => $emit('jumpPosition', parseInt((e.target as HTMLInputElement).value))"
+    @input="
+      (e) => {
+        $emit('changePositionText', parseInt((e.target as HTMLInputElement).value))
+        range = parseInt((e.target as HTMLInputElement).value)
+      }
+    "
+    @mouseup="
+      (e) => {
+        $emit('jumpPosition', parseInt((e.target as HTMLInputElement).value))
+        isSliderInput = false
+      }
+    "
+    @mousedown="isSliderInput = true"
     id="duration"
   />
 </template>
