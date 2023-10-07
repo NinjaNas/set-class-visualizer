@@ -3,12 +3,19 @@ import { ref, watch } from 'vue'
 import { JZZ } from 'jzz'
 import { Tiny } from 'jzz-synth-tiny'
 import { SMF } from 'jzz-midi-smf'
+import PlayPanel from './PlayPanel.vue'
+import { formatSetToString } from '@/functions/helpers'
 Tiny(JZZ)
 SMF(JZZ)
 
 const props = defineProps<{
   isPlaying: string
   isLooping: boolean
+  isMidiLoaded: boolean
+  position: number
+  duration: number
+  selectedSets: string[]
+  transposition: number
 }>()
 
 const $emit = defineEmits([
@@ -16,11 +23,15 @@ const $emit = defineEmits([
   'changeMidiLoaded',
   'changePosition',
   'changeStopPosition',
-  'changePlayer'
+  'changePlayer',
+  'changeIsLooping',
+  'jumpPosition',
+  'changePositionText'
 ])
 
 let synth = JZZ.synth.Tiny()
 const player = ref<null | any>(null)
+const textInput = ref<string>('')
 
 const loadPlayer = (data: string) => {
   player.value = JZZ.MIDI.SMF(data).player()
@@ -48,6 +59,16 @@ const loadMidi = (input: Event) => {
     }
     reader.readAsArrayBuffer(file) // read file
   }
+}
+
+const addCurrentSelection = () => {
+  textInput.value +=
+    'F' +
+    formatSetToString(props.selectedSets[0], true) +
+    'T' +
+    props.transposition.toString() +
+    '@' +
+    player.value.positionMS().toString()
 }
 
 watch(
@@ -88,12 +109,30 @@ watch(
 </script>
 
 <template>
-  <input class="compose-container" @change="loadMidi" type="file" accept=".mid" />
+  <div class="compose-container">
+    <PlayPanel
+      :isPlaying="isPlaying"
+      :isLooping="isLooping"
+      :isMidiLoaded="isMidiLoaded"
+      :position="position"
+      :duration="duration"
+      @changeIsPlaying="(s: string) => $emit('changeIsPlaying', s)"
+      @changeIsLooping="(d: boolean) => $emit('changeIsLooping', d)"
+      @jumpPosition="(n: number) => $emit('jumpPosition', n)"
+      @changePositionText="(n: number) => $emit('changePositionText', n)"
+    ></PlayPanel>
+    <button @click="addCurrentSelection" :disabled="!isMidiLoaded">Current Selection</button>
+    <input type="text" v-model="textInput" />
+    <input @change="loadMidi" type="file" accept=".mid" />
+  </div>
 </template>
 
 <style>
 .compose-container {
   display: grid;
-  padding: 1% 0 0 1%;
+  justify-content: center;
+  align-items: start;
+  grid-template-columns: 20em;
+  grid-template-rows: 1fr;
 }
 </style>
