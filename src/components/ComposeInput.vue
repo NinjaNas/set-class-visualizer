@@ -1,14 +1,13 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { JZZ } from 'jzz'
-import { Tiny } from 'jzz-synth-tiny'
 import { SMF } from 'jzz-midi-smf'
 import PlayPanel from './PlayPanel.vue'
 import { formatSetToString } from '@/functions/helpers'
-Tiny(JZZ)
 SMF(JZZ)
 
 const props = defineProps<{
+  player: null | any
   isPlaying: string
   isLooping: boolean
   isMidiLoaded: boolean
@@ -16,6 +15,7 @@ const props = defineProps<{
   duration: number
   selectedSets: string[]
   transposition: number
+  activeTab: string
 }>()
 
 const $emit = defineEmits([
@@ -29,15 +29,12 @@ const $emit = defineEmits([
   'changePositionText'
 ])
 
-let synth = JZZ.synth.Tiny()
-const player = ref<null | any>(null)
 const textInput = ref<string>('')
 
 const loadPlayer = (data: string) => {
-  player.value = JZZ.MIDI.SMF(data).player()
-  player.value.connect(synth)
+  const playerInit = JZZ.MIDI.SMF(data).player()
   $emit('changeMidiLoaded', true)
-  $emit('changePlayer', player.value)
+  $emit('changePlayer', playerInit)
 }
 
 const loadMidi = (input: Event) => {
@@ -68,62 +65,38 @@ const addCurrentSelection = () => {
     'T' +
     props.transposition.toString() +
     '@' +
-    player.value.positionMS().toString()
+    props.player.positionMS().toString() +
+    '\n'
 }
-
-watch(
-  () => props.isPlaying,
-  () => {
-    switch (props.isPlaying) {
-      case 'false':
-        player.value.stop()
-        $emit('changeStopPosition')
-        break
-      case 'pause':
-        player.value.pause()
-        $emit('changeStopPosition')
-        break
-      case 'resume':
-        player.value.resume()
-        $emit('changePosition')
-        break
-      case 'true':
-        player.value.resume()
-        $emit('changePosition')
-        player.value.onEnd = function () {
-          if (!props.isLooping) {
-            $emit('changeIsPlaying', 'false')
-          }
-        }
-        break
-    }
-  }
-)
-
-watch(
-  () => props.isLooping,
-  () => {
-    player.value.loop(props.isLooping)
-  }
-)
 </script>
 
 <template>
   <div class="compose-container">
-    <PlayPanel
-      :isPlaying="isPlaying"
-      :isLooping="isLooping"
-      :isMidiLoaded="isMidiLoaded"
-      :position="position"
-      :duration="duration"
-      @changeIsPlaying="(s: string) => $emit('changeIsPlaying', s)"
-      @changeIsLooping="(d: boolean) => $emit('changeIsLooping', d)"
-      @jumpPosition="(n: number) => $emit('jumpPosition', n)"
-      @changePositionText="(n: number) => $emit('changePositionText', n)"
-    ></PlayPanel>
-    <button @click="addCurrentSelection" :disabled="!isMidiLoaded">Current Selection</button>
-    <input type="text" v-model="textInput" />
-    <input @change="loadMidi" type="file" accept=".mid" />
+    <div class="piano-inner-grid-container midi-container">
+      <input style="max-width: 230px" @change="loadMidi" type="file" accept=".mid" />
+      <button style="max-width: 230px" @click="addCurrentSelection" :disabled="!isMidiLoaded">
+        Current Selection
+      </button>
+    </div>
+    <textarea
+      class="piano-inner-grid-container input-text"
+      type="text"
+      v-model="textInput"
+    ></textarea>
+    <div v-if="activeTab === 'compose'" class="piano-inner-grid-container audio-panel">
+      <h2 style="font-weight: bold; text-decoration: underline; padding: 0">Audio Panel</h2>
+      <PlayPanel
+        :isPlaying="isPlaying"
+        :isLooping="isLooping"
+        :isMidiLoaded="isMidiLoaded"
+        :position="position"
+        :duration="duration"
+        @changeIsPlaying="(s: string) => $emit('changeIsPlaying', s)"
+        @changeIsLooping="(d: boolean) => $emit('changeIsLooping', d)"
+        @jumpPosition="(n: number) => $emit('jumpPosition', n)"
+        @changePositionText="(n: number) => $emit('changePositionText', n)"
+      ></PlayPanel>
+    </div>
   </div>
 </template>
 
@@ -132,7 +105,12 @@ watch(
   display: grid;
   justify-content: center;
   align-items: start;
-  grid-template-columns: 20em;
+  grid-template-columns: 1fr 1fr 1fr;
   grid-template-rows: 1fr;
+  padding: 2em;
+}
+
+.input-text {
+  height: auto;
 }
 </style>

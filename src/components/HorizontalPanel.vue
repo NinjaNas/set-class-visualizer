@@ -3,6 +3,7 @@ import { nextTick, onMounted, ref, watch } from 'vue'
 import PianoTab from '../components/PianoTab.vue'
 import OptionsTab from '../components/OptionsTab.vue'
 import ComposeInput from './ComposeInput.vue'
+import { JZZ } from 'jzz'
 
 const props = defineProps<{
   isHorizontalPanelOpen: boolean
@@ -10,6 +11,8 @@ const props = defineProps<{
   textFieldFocused: boolean
   transposition: number
 }>()
+
+let synth = JZZ.synth.Tiny()
 
 const activeTab = ref<string>('piano')
 const selectedMidiIn = ref<string>('')
@@ -46,6 +49,7 @@ const changeMidiLoaded = (b: boolean) => {
 
 const changePlayer = (a: any) => {
   player.value = a
+  player.value.connect(synth)
   position.value = player.value.positionMS()
   duration.value = player.value.durationMS()
 }
@@ -57,6 +61,11 @@ const changePosition = () => {
     }, 100)
   )
   duration.value = player.value.durationMS()
+  player.value.onEnd = function () {
+    if (!isLooping.value) {
+      changeIsPlaying('false')
+    }
+  }
 }
 
 const changeStopPosition = () => {
@@ -101,6 +110,37 @@ const resizeHandler = (event: MouseEvent) => {
   document.addEventListener('mousemove', handleMouseMove)
   document.addEventListener('mouseup', stopResizing)
 }
+
+watch(
+  () => isPlaying.value,
+  () => {
+    switch (isPlaying.value) {
+      case 'false':
+        player.value.stop()
+        changeStopPosition()
+        break
+      case 'pause':
+        player.value.pause()
+        changeStopPosition()
+        break
+      case 'resume':
+        player.value.resume()
+        changePosition()
+        break
+      case 'true':
+        player.value.resume()
+        changePosition()
+        break
+    }
+  }
+)
+
+watch(
+  () => isLooping.value,
+  () => {
+    player.value.loop(isLooping.value)
+  }
+)
 
 onMounted(() => {
   watch(
@@ -167,6 +207,8 @@ onMounted(() => {
           :duration="duration"
           :selectedSets="selectedSets"
           :transposition="transposition"
+          :activeTab="activeTab"
+          :player="player"
           @changeIsPlaying="changeIsPlaying"
           @changeMidiLoaded="changeMidiLoaded"
           @changePosition="changePosition"
@@ -177,7 +219,7 @@ onMounted(() => {
           @changePositionText="changePositionText"
         ></ComposeInput>
         <OptionsTab
-          v-show="activeTab === 'options'"
+          v-if="activeTab === 'options'"
           @changeGraphText="(d: string) => $emit('changeGraphText', d)"
           @changeVerticalPanelToggle="(d: boolean) => $emit('changeVerticalPanelToggle', d)"
           @useLocalOrFetchAndCreateDag="(d: string) => $emit('useLocalOrFetchAndCreateDag', d)"

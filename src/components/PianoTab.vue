@@ -193,7 +193,7 @@ const enableKeypress = () => {
 const disableKeypress = () => {
   disconnectPiano()
   ascii.value.close()
-  filter.value.close()
+  filter.value = JZZ.Widget()
   connectPiano()
 }
 
@@ -385,12 +385,9 @@ onMounted(() => {
     () => props.activeTab,
     () => {
       if (props.activeTab === 'piano') {
-        // connectPiano()
         enableKeypress()
       } else {
-        console.log('test')
         disableKeypress()
-        // disconnectPiano()
       }
     }
   )
