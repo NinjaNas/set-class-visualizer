@@ -18,7 +18,6 @@ const container = ref<null | HTMLDivElement>(null)
 const containerHeight = ref<null | number>(null)
 const isMidiLoaded = ref<boolean>(false)
 const isPlaying = ref<string>('false')
-const isPaused = ref<boolean>(false)
 const isLooping = ref<boolean>(false)
 const positionId = ref<number[]>([])
 const position = ref<number>(0)
@@ -142,7 +141,7 @@ onMounted(() => {
           </li>
         </ul>
         <PianoTab
-          v-show="activeTab === 'piano'"
+          v-if="activeTab === 'piano'"
           :selectedSets="props.selectedSets"
           :textFieldFocused="textFieldFocused"
           :transposition="transposition"
@@ -150,7 +149,6 @@ onMounted(() => {
           :selectedMidiOut="selectedMidiOut"
           :isPlaying="isPlaying"
           :isLooping="isLooping"
-          :isPaused="isPaused"
           :position="position"
           :duration="duration"
           :isMidiLoaded="isMidiLoaded"
@@ -160,17 +158,25 @@ onMounted(() => {
           @changePositionText="changePositionText"
         ></PianoTab>
         <ComposeInput
-          v-show="activeTab === 'compose'"
+          v-if="activeTab === 'compose'"
           :isPlaying="isPlaying"
           :isLooping="isLooping"
+          :isMidiLoaded="isMidiLoaded"
+          :position="position"
+          :duration="duration"
+          :selectedSets="selectedSets"
+          :transposition="transposition"
           @changeIsPlaying="changeIsPlaying"
           @changeMidiLoaded="changeMidiLoaded"
           @changePosition="changePosition"
           @changeStopPosition="changeStopPosition"
           @changePlayer="changePlayer"
+          @changeIsLooping="changeIsLooping"
+          @jumpPosition="jumpPosition"
+          @changePositionText="changePositionText"
         ></ComposeInput>
         <OptionsTab
-          v-show="activeTab === 'options'"
+          v-if="activeTab === 'options'"
           @changeGraphText="(d: string) => $emit('changeGraphText', d)"
           @changeVerticalPanelToggle="(d: boolean) => $emit('changeVerticalPanelToggle', d)"
           @useLocalOrFetchAndCreateDag="(d: string) => $emit('useLocalOrFetchAndCreateDag', d)"
@@ -258,7 +264,7 @@ ul.tabs li:hover {
   padding-right: 0.5em;
 }
 
-@media only screen and (min-width: 1024px) {
+@media only screen and (min-width: 1280px) {
   .tabs {
     padding: 1% 0 0 1%;
     justify-content: initial;
