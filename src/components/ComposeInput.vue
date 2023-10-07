@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref } from 'vue'
 import { JZZ } from 'jzz'
 import { SMF } from 'jzz-midi-smf'
 import PlayPanel from './PlayPanel.vue'
@@ -30,6 +30,7 @@ const $emit = defineEmits([
 ])
 
 const textInput = ref<string>('')
+const textAreaRef = ref<null | HTMLTextAreaElement>(null)
 
 const loadPlayer = (data: string) => {
   const playerInit = JZZ.MIDI.SMF(data).player()
@@ -66,7 +67,17 @@ const addCurrentSelection = () => {
     props.transposition.toString() +
     '@' +
     props.player.positionMS().toString() +
-    '\n'
+    '\t'
+  textAreaChangeHandler(1)
+}
+
+const textAreaChangeHandler = (additionalLines = 0) => {
+  if (!textAreaRef.value) return
+  textAreaRef.value.style.height = '0px'
+  textAreaRef.value.style.height = `${Math.max(
+    textAreaRef.value.scrollHeight + 4 + additionalLines * 15,
+    55
+  )}px`
 }
 </script>
 
@@ -79,9 +90,12 @@ const addCurrentSelection = () => {
       </button>
     </div>
     <textarea
+      ref="textAreaRef"
       class="piano-inner-grid-container input-text"
       type="text"
       v-model="textInput"
+      style="width: 680px"
+      @input="textAreaChangeHandler()"
     ></textarea>
     <div v-if="activeTab === 'compose'" class="piano-inner-grid-container audio-panel">
       <h2 style="font-weight: bold; text-decoration: underline; padding: 0">Audio Panel</h2>
