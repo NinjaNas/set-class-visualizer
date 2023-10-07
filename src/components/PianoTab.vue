@@ -22,6 +22,7 @@ const props = defineProps<{
   isMidiLoaded: boolean
   position: number
   duration: number
+  activeTab: string
 }>()
 
 const synth = JZZ.synth.Tiny()
@@ -191,8 +192,8 @@ const enableKeypress = () => {
 
 const disableKeypress = () => {
   disconnectPiano()
-  ascii.value = JZZ.input.ASCII()
-  filter.value = JZZ.Widget()
+  ascii.value.close()
+  filter.value.close()
   connectPiano()
 }
 
@@ -377,6 +378,20 @@ onMounted(() => {
       portOut.value.close()
       setPortOut(props.selectedMidiOut)
       connectPiano()
+    }
+  )
+
+  watch(
+    () => props.activeTab,
+    () => {
+      if (props.activeTab === 'piano') {
+        // connectPiano()
+        enableKeypress()
+      } else {
+        console.log('test')
+        disableKeypress()
+        // disconnectPiano()
+      }
     }
   )
 })

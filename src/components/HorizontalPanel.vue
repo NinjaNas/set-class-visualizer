@@ -141,7 +141,7 @@ onMounted(() => {
           </li>
         </ul>
         <PianoTab
-          v-if="activeTab === 'piano'"
+          v-show="activeTab === 'piano'"
           :selectedSets="props.selectedSets"
           :textFieldFocused="textFieldFocused"
           :transposition="transposition"
@@ -152,13 +152,14 @@ onMounted(() => {
           :position="position"
           :duration="duration"
           :isMidiLoaded="isMidiLoaded"
+          :activeTab="activeTab"
           @changeIsPlaying="changeIsPlaying"
           @changeIsLooping="changeIsLooping"
           @jumpPosition="jumpPosition"
           @changePositionText="changePositionText"
         ></PianoTab>
         <ComposeInput
-          v-if="activeTab === 'compose'"
+          v-show="activeTab === 'compose'"
           :isPlaying="isPlaying"
           :isLooping="isLooping"
           :isMidiLoaded="isMidiLoaded"
@@ -176,7 +177,7 @@ onMounted(() => {
           @changePositionText="changePositionText"
         ></ComposeInput>
         <OptionsTab
-          v-if="activeTab === 'options'"
+          v-show="activeTab === 'options'"
           @changeGraphText="(d: string) => $emit('changeGraphText', d)"
           @changeVerticalPanelToggle="(d: boolean) => $emit('changeVerticalPanelToggle', d)"
           @useLocalOrFetchAndCreateDag="(d: string) => $emit('useLocalOrFetchAndCreateDag', d)"
