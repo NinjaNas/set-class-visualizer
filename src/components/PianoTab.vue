@@ -450,12 +450,13 @@ onUnmounted(() => {
 
 .audio-panel {
   margin: 0 min-content 0 min-content;
+  min-width: 250px;
   padding: 1em;
   border-radius: 10px;
   border: 1px solid var(--color-accent);
 }
 
-@media only screen and (min-width: 1024px) {
+@media only screen and (min-width: 1280px) {
   .piano-container {
     grid-template-columns: 1fr min-content 1fr;
     grid-template-rows: 1fr;
