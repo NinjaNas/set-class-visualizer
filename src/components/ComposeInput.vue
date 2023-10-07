@@ -66,7 +66,7 @@ const addCurrentSelection = () => {
     'T' +
     props.transposition.toString() +
     '@' +
-    props.player.positionMS().toString() +
+    props.player.positionMS().toFixed() +
     '\t'
   textAreaChangeHandler(1)
 }
