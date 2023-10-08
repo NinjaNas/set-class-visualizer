@@ -2,7 +2,7 @@
 import { nextTick, onMounted, ref, watch } from 'vue'
 import PianoTab from '../components/PianoTab.vue'
 import OptionsTab from '../components/OptionsTab.vue'
-import ComposeInput from './ComposeInput.vue'
+import ProgramInput from './ProgramInput.vue'
 import { JZZ } from 'jzz'
 
 const props = defineProps<{
@@ -173,8 +173,8 @@ onMounted(() => {
           <li @click="activeTab = 'piano'" :class="{ 'active-color': activeTab === 'piano' }">
             Piano
           </li>
-          <li @click="activeTab = 'compose'" :class="{ 'active-color': activeTab === 'compose' }">
-            Compose
+          <li @click="activeTab = 'program'" :class="{ 'active-color': activeTab === 'program' }">
+            Program
           </li>
           <li @click="activeTab = 'options'" :class="{ 'active-color': activeTab === 'options' }">
             Options
@@ -198,8 +198,8 @@ onMounted(() => {
           @jumpPosition="jumpPosition"
           @changePositionText="changePositionText"
         ></PianoTab>
-        <ComposeInput
-          v-show="activeTab === 'compose'"
+        <ProgramInput
+          v-show="activeTab === 'program'"
           :isPlaying="isPlaying"
           :isLooping="isLooping"
           :isMidiLoaded="isMidiLoaded"
@@ -217,7 +217,7 @@ onMounted(() => {
           @changeIsLooping="changeIsLooping"
           @jumpPosition="jumpPosition"
           @changePositionText="changePositionText"
-        ></ComposeInput>
+        ></ProgramInput>
         <OptionsTab
           v-if="activeTab === 'options'"
           @changeGraphText="(d: string) => $emit('changeGraphText', d)"

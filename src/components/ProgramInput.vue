@@ -82,7 +82,7 @@ const textAreaChangeHandler = (additionalLines = 0) => {
 </script>
 
 <template>
-  <div class="compose-container">
+  <div class="program-container">
     <div class="piano-inner-grid-container midi-container">
       <input style="max-width: 230px" @change="loadMidi" type="file" accept=".mid" />
       <button style="max-width: 230px" @click="addCurrentSelection" :disabled="!isMidiLoaded">
@@ -97,7 +97,7 @@ const textAreaChangeHandler = (additionalLines = 0) => {
       style="width: 680px"
       @input="textAreaChangeHandler()"
     ></textarea>
-    <div v-if="activeTab === 'compose'" class="piano-inner-grid-container audio-panel">
+    <div v-if="activeTab === 'program'" class="piano-inner-grid-container audio-panel">
       <h2 style="font-weight: bold; text-decoration: underline; padding: 0">Audio Panel</h2>
       <PlayPanel
         :isPlaying="isPlaying"
@@ -115,7 +115,7 @@ const textAreaChangeHandler = (additionalLines = 0) => {
 </template>
 
 <style>
-.compose-container {
+.program-container {
   display: grid;
   justify-content: center;
   align-items: start;
