@@ -28,24 +28,21 @@ JZZ()
 
 const setMidiIn = () => {
   midiInArr.value = JZZ().info().inputs
-}
 
-setMidiIn()
-
-if (midiIn.value === '' || !midiInArr.value.some((e) => e.name === midiIn.value)) {
-  JZZ()
-    .openMidiIn()
-    .and(function (this: any) {
-      midiIn.value = this.name()
-    })
+  if (midiIn.value === '' || !midiInArr.value.some((e) => e.name === midiIn.value)) {
+    midiIn.value = JZZ().openMidiIn().name()
+  }
 }
 
 const $emit = defineEmits(['changeMidiIn'])
 
 watch(midiIn, () => {
+  console.log(midiIn.value)
   $emit('changeMidiIn', midiIn.value)
   localStorage.setItem('midiIn', midiIn.value)
 })
+
+setMidiIn()
 </script>
 
 <template>
