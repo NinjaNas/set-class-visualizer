@@ -456,7 +456,6 @@ onUnmounted(() => {
   display: grid;
   justify-content: center;
   align-items: center;
-  grid-template-rows: 1fr;
   gap: 3px;
 }
 
@@ -474,7 +473,7 @@ onUnmounted(() => {
     grid-template-rows: 1fr;
   }
   .audio-panel {
-    margin: 0 30% 0 30%;
+    margin: 0 auto 0 auto;
   }
 }
 

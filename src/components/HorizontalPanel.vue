@@ -307,6 +307,15 @@ ul.tabs li:hover {
   padding-right: 0.5em;
 }
 
+@media only screen and (min-width: 480px) {
+  .menuCloseHorizontal:before {
+    font-size: 2.5em;
+  }
+  .horizontal-container {
+    height: 400px;
+  }
+}
+
 @media only screen and (min-width: 1280px) {
   .tabs {
     padding: 1% 0 0 1%;
@@ -314,15 +323,6 @@ ul.tabs li:hover {
   }
   ul.tabs li {
     min-width: 100px;
-  }
-}
-
-@media only screen and (min-width: 480px) {
-  .menuCloseHorizontal:before {
-    font-size: 2.5em;
-  }
-  .horizontal-container {
-    height: 400px;
   }
 }
 

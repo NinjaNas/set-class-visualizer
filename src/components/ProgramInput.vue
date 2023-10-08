@@ -71,33 +71,49 @@ const addCurrentSelection = () => {
   textAreaChangeHandler(1)
 }
 
+const parse = () => {}
+
 const textAreaChangeHandler = (additionalLines = 0) => {
   if (!textAreaRef.value) return
   textAreaRef.value.style.height = '0px'
   textAreaRef.value.style.height = `${Math.max(
     textAreaRef.value.scrollHeight + 4 + additionalLines * 15,
-    55
+    100
   )}px`
 }
 </script>
 
 <template>
   <div class="program-container">
-    <div class="piano-inner-grid-container midi-container">
-      <input style="max-width: 230px" @change="loadMidi" type="file" accept=".mid" />
-      <button style="max-width: 230px" @click="addCurrentSelection" :disabled="!isMidiLoaded">
-        Current Selection
-      </button>
+    <div class="piano-inner-grid-container program-panel">
+      <h2 style="font-weight: bold; text-decoration: underline; padding: 0">Program Panel</h2>
+      <div>
+        <label for="load-midi">Load Midi:</label>
+        <input
+          id="load-midi"
+          style="max-width: 230px"
+          @change="loadMidi"
+          type="file"
+          accept=".mid"
+        />
+      </div>
+      <label for="programInput">Program Input:</label>
+      <div id="programInput" class="program-buttons">
+        <button @click="addCurrentSelection" :disabled="!isMidiLoaded">Add Set @ Time</button>
+        <button @click="parse" :disabled="!isMidiLoaded">Parse Program</button>
+      </div>
     </div>
-    <textarea
-      ref="textAreaRef"
-      class="piano-inner-grid-container input-text"
-      type="text"
-      v-model="textInput"
-      style="width: 680px"
-      @input="textAreaChangeHandler()"
-    ></textarea>
-    <div v-if="activeTab === 'program'" class="piano-inner-grid-container audio-panel">
+    <div class="import-program-panel">
+      <h2 style="font-weight: bold; text-decoration: underline; padding: 0">Import Program</h2>
+      <textarea
+        ref="textAreaRef"
+        class="piano-inner-grid-container input-text"
+        type="text"
+        v-model="textInput"
+        @input="textAreaChangeHandler()"
+      ></textarea>
+    </div>
+    <div v-if="activeTab === 'program'" class="piano-inner-grid-container audio-panel-program-tab">
       <h2 style="font-weight: bold; text-decoration: underline; padding: 0">Audio Panel</h2>
       <PlayPanel
         :isPlaying="isPlaying"
@@ -116,15 +132,88 @@ const textAreaChangeHandler = (additionalLines = 0) => {
 
 <style>
 .program-container {
+  width: min-content;
+  margin: 0 auto;
   display: grid;
   justify-content: center;
   align-items: start;
-  grid-template-columns: 1fr 1fr 1fr;
-  grid-template-rows: 1fr;
+  grid-template-columns: 1fr;
+  grid-template-areas:
+    'c'
+    'a'
+    'b';
   padding: 2em;
+  gap: 5px;
 }
 
 .input-text {
-  height: auto;
+  min-height: 100px;
+  width: 100%;
+}
+
+.program-buttons {
+  display: grid;
+  justify-content: center;
+  align-items: start;
+  grid-template-columns: 1fr 1fr;
+}
+
+.import-program-panel {
+  margin: 0 min-content 0 min-content;
+  padding: 1em;
+  border-radius: 10px;
+  border: 1px solid var(--color-accent);
+  grid-column: span 2;
+  grid-area: b;
+  min-height: 171px;
+}
+
+.program-panel {
+  grid-area: a;
+  margin: 0 auto 0 auto;
+  width: 250px;
+  padding: 1em;
+  border-radius: 10px;
+  border: 1px solid var(--color-accent);
+  min-height: 171px;
+}
+
+.audio-panel-program-tab {
+  margin: 0 auto 0 auto;
+  min-width: 250px;
+  padding: 1em;
+  border-radius: 10px;
+  border: 1px solid var(--color-accent);
+  grid-area: c;
+  min-height: 171px;
+}
+
+@media only screen and (min-width: 720px) {
+  .program-container {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    grid-template-areas:
+      'a c'
+      'b b';
+  }
+}
+
+@media only screen and (min-width: 1440px) {
+  .program-container {
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1fr;
+    grid-template-areas: none;
+    width: auto;
+  }
+  .program-panel {
+    grid-area: auto;
+  }
+  .import-program-panel {
+    grid-column: span 1;
+    grid-area: auto;
+  }
+  .audio-panel-program-tab {
+    grid-area: auto;
+  }
 }
 </style>
