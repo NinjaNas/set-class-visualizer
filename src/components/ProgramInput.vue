@@ -67,11 +67,146 @@ const addCurrentSelection = () => {
     props.transposition.toString() +
     '@' +
     props.player.positionMS().toFixed() +
-    '\t'
-  textAreaChangeHandler(1)
+    '\n'
+  textAreaChangeHandler(1) // add extra newline of height
 }
 
-const parse = () => {}
+const parse = () => {
+  const ignoreWhiteSpaceAppend = (c: string | undefined) => {
+    if (!c) return
+    if (/\s/g.test(c)) {
+      return ''
+    } else {
+      return c
+    }
+  }
+  const changeLocation = (c: string | undefined) => {
+    if (!c) return
+    if (c === '\n') {
+      location.lineNumber++
+      location.charNumber = 0
+    } else {
+      location.charNumber++
+    }
+  }
+
+  const incrementCurrDelimiter = () => {
+    currDelimiter = (currDelimiter + 1) % delimiters.length
+  }
+
+  const parseDelimiters = (
+    delimiter: string,
+    arr: string[],
+    validateFunc: (token: string, arr: string[], errorStack: string[]) => void
+  ): void => {
+    if (delimiters[currDelimiter] === delimiter) {
+      let token = ''
+      let char = src.shift()
+      // read until next delimiter or whitespace
+      while (src[0] && !delimiters.includes(src[0])) {
+        char = src.shift()
+        token += ignoreWhiteSpaceAppend(char)
+        if (ignoreWhiteSpaceAppend(char) === '') {
+          break
+        }
+        changeLocation(char)
+      }
+      // validate after full token is read
+      validateFunc(token, arr, errorStack)
+      // move delimiter to next expected value
+      incrementCurrDelimiter()
+      changeLocation(char) // change location after validating
+      // read whitespace until next delimiter
+      while (src[0] && !delimiters.includes(src[0])) {
+        char = src.shift()
+        token += ignoreWhiteSpaceAppend(char)
+        changeLocation(char)
+      }
+    } else {
+      const error = `[${location.lineNumber}:${location.charNumber}] Unexpected delimiter ${delimiter}, expected ${delimiters[currDelimiter]}`
+      errorStack.push(error)
+    }
+  }
+
+  const timestampValidation = (token: string, arr: string[], errorStack: string[]): void => {
+    if (seen.has(token)) {
+      duplicates.add(token)
+    } else {
+      seen.add(token)
+    }
+
+    if (duplicates.size) {
+      const error = `[${location.lineNumber}:${location.charNumber}] Duplicate timestamp ${token}`
+      errorStack.push(error)
+      duplicates.clear()
+    }
+
+    arr.push(token)
+  }
+
+  const src = textInput.value.split('')
+
+  const errorStack: string[] = []
+
+  const location = { lineNumber: 1, charNumber: 0 }
+
+  const forteArr: string[] = []
+  const transpositionArr: string[] = []
+  const timestampArr: string[] = []
+
+  const delimiters = ['F', 'T', '@']
+  let currDelimiter = 0
+
+  // used to prevent duplicate timestamps
+  const seen = new Set()
+  const duplicates = new Set()
+
+  while (src.length > 0) {
+    const nextChar = src.shift()
+    changeLocation(nextChar)
+    switch (nextChar) {
+      case 'F':
+        parseDelimiters(
+          'F',
+          forteArr,
+          (token: string, arr: string[], errorStack: string[]) => {
+            arr.push(token)
+          } // TODO create validation function
+        )
+        break
+      case 'T':
+        parseDelimiters(
+          'T',
+          transpositionArr,
+          (token: string, arr: string[], errorStack: string[]) => {
+            arr.push(token)
+          } // TODO create validation function
+        )
+        break
+      case '@':
+        parseDelimiters('@', timestampArr, timestampValidation)
+        break
+      default:
+        break
+    }
+  }
+
+  if (errorStack.length) {
+    console.log(errorStack)
+    return errorStack // TODO display error stack
+  } else {
+    const res = []
+    for (let i = 0; i < forteArr.length; i++) {
+      res.push({
+        forte: forteArr[i],
+        transposition: transpositionArr[i],
+        timestamp: timestampArr[i]
+      })
+    }
+    console.log(res)
+    return res // TODO use result to change selectedSet based on timestamp while midi is playing
+  }
+}
 
 const textAreaChangeHandler = (additionalLines = 0) => {
   if (!textAreaRef.value) return
