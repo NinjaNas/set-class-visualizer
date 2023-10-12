@@ -386,8 +386,10 @@ onMounted(() => {
     () => {
       if (props.activeTab === 'piano') {
         enableKeypress()
+        window.addEventListener('keydown', keydownHandler)
       } else {
         disableKeypress()
+        window.removeEventListener('keydown', keydownHandler)
       }
     }
   )
@@ -415,7 +417,7 @@ onUnmounted(() => {
       </ul>
       <div class="piano" ref="pianoRef"></div>
     </div>
-    <div class="piano-inner-grid-container audio-panel">
+    <div v-if="activeTab === 'piano'" class="piano-inner-grid-container audio-panel">
       <h2 style="font-weight: bold; text-decoration: underline; padding: 0">Audio Panel</h2>
       <PlayPanel
         :isPlaying="isPlaying"
