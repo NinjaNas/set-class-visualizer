@@ -284,6 +284,7 @@ const textAreaChangeHandler = (additionalLines = 0) => {
 .input-text {
   min-height: 100px;
   width: 100%;
+  white-space: pre;
 }
 
 .program-buttons {
