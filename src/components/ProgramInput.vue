@@ -104,7 +104,7 @@ const parse = () => {
     let char: string | undefined = ''
 
     if (delimiters[currDelimiter] !== delimiter) {
-      const error = `[${location.lineNumber}:${location.charNumber}] Unexpected delimiter ${delimiter}, expected ${delimiters[currDelimiter]}`
+      const error = `[${location.lineNumber}:${location.charNumber}] Unexpected delimiter '${delimiter}', expected '${delimiters[currDelimiter]}'`
       errorStack.push(error)
     } else {
       incrementCurrDelimiter() // move delimiter to next expected value
@@ -129,30 +129,92 @@ const parse = () => {
     }
   }
 
+  const forteValidation = (token: string, errorStack: string[]): void => {
+    if (!token.length) {
+      const error = `[${location.lineNumber}:${location.charNumber}] Missing forte value`
+      errorStack.push(error)
+      return
+    }
+
+    if (!/^\d{1,2}-z?\d{1,2}[A,B]?$/g.test(token)) {
+      const error = `[${location.lineNumber}:${location.charNumber}] Incorrect format of forte token '${token}', must be in the regex format ^\\d{1,2}-z?\\d{1,2}[A,B]?$`
+      errorStack.push(error)
+      return
+    }
+
+    // TODO: add a step to validate if the valid formatted forte number exists
+  }
+
+  const transpositionValidation = (token: string, errorStack: string[]): void => {
+    if (!token.length) {
+      const error = `[${location.lineNumber}:${location.charNumber}] Missing transposition value`
+      errorStack.push(error)
+      return
+    }
+
+    if (!/^\d+$/g.test(token)) {
+      const error = `[${location.lineNumber}:${location.charNumber}] Incorrect format of transposition token '${token}', must be a non-negative integer`
+      errorStack.push(error)
+      return
+    }
+
+    const tokenInt = parseInt(token, 10)
+
+    if (tokenInt > 11) {
+      const error = `[${location.lineNumber}:${location.charNumber}] Transposition token '${tokenInt}' is greater than 11`
+      errorStack.push(error)
+      return
+    }
+  }
+
   const timestampValidation = (token: string, errorStack: string[]): void => {
     if (!token.length) {
       const error = `[${location.lineNumber}:${location.charNumber}] Missing timestamp value`
       errorStack.push(error)
-      return // do not run duplication validation when token is empty
+      return
+    }
+
+    if (!/^\d+$/g.test(token)) {
+      const error = `[${location.lineNumber}:${location.charNumber}] Incorrect format of timestamp token '${token}', must be a non-negative integer`
+      errorStack.push(error)
+      return
+    }
+
+    const tokenInt = parseInt(token, 10)
+
+    if (tokenInt > Math.floor(props.duration)) {
+      const error = `[${location.lineNumber}:${
+        location.charNumber
+      }] Timestamp token '${tokenInt}' is greater than the duration (${Math.floor(
+        props.duration
+      )}) of the MIDI file`
+      errorStack.push(error)
+      return
     }
 
     // duplicate validation
-    if (seen.has(token)) {
-      duplicates.add(token)
+    if (seen.has(tokenInt)) {
+      duplicates.add(tokenInt)
     } else {
-      seen.add(token)
+      seen.add(tokenInt)
     }
 
     if (duplicates.size) {
-      const error = `[${location.lineNumber}:${location.charNumber}] Duplicate timestamp '${token}'`
+      const error = `[${location.lineNumber}:${location.charNumber}] Duplicate timestamp '${tokenInt}'`
       errorStack.push(error)
       duplicates.clear()
+      return
     }
   }
 
   const src = textInput.value.split('')
 
   const errorStack: string[] = []
+
+  if (!src.length) {
+    const error = `Cannot parse empty program`
+    errorStack.push(error)
+  }
 
   const location = { lineNumber: 1, charNumber: 0 }
 
@@ -171,18 +233,10 @@ const parse = () => {
     const nextChar = src.shift()
     switch (nextChar) {
       case 'F':
-        parseDelimiters(
-          'F',
-          forteArr,
-          (token: string, errorStack: string[]) => {} // TODO create validation function
-        )
+        parseDelimiters('F', forteArr, forteValidation)
         break
       case 'T':
-        parseDelimiters(
-          'T',
-          transpositionArr,
-          (token: string, errorStack: string[]) => {} // TODO create validation function
-        )
+        parseDelimiters('T', transpositionArr, transpositionValidation)
         break
       case '@':
         parseDelimiters('@', timestampArr, timestampValidation)
@@ -190,6 +244,14 @@ const parse = () => {
       default:
         break
     }
+  }
+
+  if (currDelimiter === 1) {
+    const error = `[${location.lineNumber}:${location.charNumber}] Incomplete program, missing delimiters 'T' and '@'`
+    errorStack.push(error)
+  } else if (currDelimiter === 2) {
+    const error = `[${location.lineNumber}:${location.charNumber}] Incomplete program, missing delimiter '@'`
+    errorStack.push(error)
   }
 
   if (errorStack.length) {
