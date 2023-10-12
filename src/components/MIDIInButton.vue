@@ -37,7 +37,6 @@ const setMidiIn = () => {
 const $emit = defineEmits(['changeMidiIn'])
 
 watch(midiIn, () => {
-  console.log(midiIn.value)
   $emit('changeMidiIn', midiIn.value)
   localStorage.setItem('midiIn', midiIn.value)
 })
