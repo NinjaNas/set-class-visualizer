@@ -72,21 +72,22 @@ const addCurrentSelection = () => {
 }
 
 const parse = () => {
-  const ignoreWhiteSpaceAppend = (c: string | undefined) => {
-    if (!c) return
+  const testWhiteSpace = (c: string | undefined) => {
+    if (c === undefined) return
     if (/\s/g.test(c)) {
-      return ''
+      return ' '
     } else {
       return c
     }
   }
-  const changeLocation = (c: string | undefined) => {
-    if (!c) return
-    if (c === '\n') {
+  const changeLocation = (s: string | undefined) => {
+    if (s === undefined) return // undefined means end of array
+    if (s === '\n') {
       location.lineNumber++
       location.charNumber = 0
     } else {
-      location.charNumber++
+      // add length of the token, whitespace have a length of one
+      location.charNumber += s.length
     }
   }
 
@@ -97,38 +98,45 @@ const parse = () => {
   const parseDelimiters = (
     delimiter: string,
     arr: string[],
-    validateFunc: (token: string, arr: string[], errorStack: string[]) => void
+    validateToken: (token: string, errorStack: string[]) => void
   ): void => {
-    if (delimiters[currDelimiter] === delimiter) {
-      let token = ''
-      let char = src.shift()
-      // read until next delimiter or whitespace
-      while (src[0] && !delimiters.includes(src[0])) {
-        char = src.shift()
-        token += ignoreWhiteSpaceAppend(char)
-        if (ignoreWhiteSpaceAppend(char) === '') {
-          break
-        }
-        changeLocation(char)
-      }
-      // validate after full token is read
-      validateFunc(token, arr, errorStack)
-      // move delimiter to next expected value
-      incrementCurrDelimiter()
-      changeLocation(char) // change location after validating
-      // read whitespace until next delimiter
-      while (src[0] && !delimiters.includes(src[0])) {
-        char = src.shift()
-        token += ignoreWhiteSpaceAppend(char)
-        changeLocation(char)
-      }
-    } else {
+    let token = ''
+    let char: string | undefined = ''
+
+    if (delimiters[currDelimiter] !== delimiter) {
       const error = `[${location.lineNumber}:${location.charNumber}] Unexpected delimiter ${delimiter}, expected ${delimiters[currDelimiter]}`
       errorStack.push(error)
+    } else {
+      incrementCurrDelimiter() // move delimiter to next expected value
+    }
+
+    changeLocation(delimiter) // add the length of the delimiter, after parsing delimiter error
+
+    // read until next delimiter or whitespace
+    while (src[0] && !delimiters.includes(src[0]) && testWhiteSpace(src[0]) !== ' ') {
+      char = src.shift()
+      token += char
+    }
+
+    validateToken(token, errorStack) // validate after full token is read
+    arr.push(token) // push token, even on error
+    changeLocation(token) // add the length of the token after validating the token
+
+    // read whitespace until next delimiter
+    while (src[0] && !delimiters.includes(src[0])) {
+      char = src.shift()
+      changeLocation(char) // add the length of the whitespace
     }
   }
 
-  const timestampValidation = (token: string, arr: string[], errorStack: string[]): void => {
+  const timestampValidation = (token: string, errorStack: string[]): void => {
+    if (!token.length) {
+      const error = `[${location.lineNumber}:${location.charNumber}] Missing timestamp value`
+      errorStack.push(error)
+      return // do not run duplication validation when token is empty
+    }
+
+    // duplicate validation
     if (seen.has(token)) {
       duplicates.add(token)
     } else {
@@ -136,12 +144,10 @@ const parse = () => {
     }
 
     if (duplicates.size) {
-      const error = `[${location.lineNumber}:${location.charNumber}] Duplicate timestamp ${token}`
+      const error = `[${location.lineNumber}:${location.charNumber}] Duplicate timestamp '${token}'`
       errorStack.push(error)
       duplicates.clear()
     }
-
-    arr.push(token)
   }
 
   const src = textInput.value.split('')
@@ -163,24 +169,19 @@ const parse = () => {
 
   while (src.length > 0) {
     const nextChar = src.shift()
-    changeLocation(nextChar)
     switch (nextChar) {
       case 'F':
         parseDelimiters(
           'F',
           forteArr,
-          (token: string, arr: string[], errorStack: string[]) => {
-            arr.push(token)
-          } // TODO create validation function
+          (token: string, errorStack: string[]) => {} // TODO create validation function
         )
         break
       case 'T':
         parseDelimiters(
           'T',
           transpositionArr,
-          (token: string, arr: string[], errorStack: string[]) => {
-            arr.push(token)
-          } // TODO create validation function
+          (token: string, errorStack: string[]) => {} // TODO create validation function
         )
         break
       case '@':
