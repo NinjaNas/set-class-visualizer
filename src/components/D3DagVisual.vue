@@ -71,7 +71,7 @@ const currNoteQueue = ref<string[]>([])
 const intervalIds = ref<number[]>([])
 const graphAudioType = ref<string>('chord')
 
-const fetchExtendedData = async () => {
+const fetchData = async () => {
   try {
     const res = await fetch(
       'https://hcda8f8dtk.execute-api.us-east-1.amazonaws.com/prod/api/data/',
@@ -79,7 +79,7 @@ const fetchExtendedData = async () => {
     )
     if (res.ok) {
       const dataRes: DataSet = await res.json()
-      localStorage.setItem('extendedData', JSON.stringify(dataRes))
+      localStorage.setItem('data', JSON.stringify(dataRes))
       apiData.value = dataRes
     } else {
       console.log('Not 200', res)
@@ -221,10 +221,10 @@ const createDag = async () => {
 
       selectedSets.value = getSelectedSets(d)
 
-      const extendedData = localStorage.getItem('data')
+      const data = localStorage.getItem('data')
 
-      if (!extendedData || !apiData.value.length) {
-        fetchExtendedData()
+      if (!data || !apiData.value.length) {
+        fetchData()
       }
 
       isVerticalPanelOpen.value = true && verticalPanelToggle.value
