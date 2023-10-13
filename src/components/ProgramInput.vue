@@ -407,7 +407,7 @@ const textAreaChangeHandler = (additionalLines = 0) => {
 @media only screen and (min-width: 720px) {
   .program-container {
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: 1fr 1fr;
+    grid-template-rows: min-content min-content;
     grid-template-areas:
       'a c'
       'b b';
