@@ -45,6 +45,8 @@ const MAX_SCALE = 30
 const abortController = new AbortController()
 const localData = localStorage.getItem('data')
 const apiData = ref<DataSet>(JSON.parse(localData ? localData : '[]'))
+const localHashData = localStorage.getItem('hashData')
+const hashData = ref<{ [key: string]: string }>(JSON.parse(localHashData ? localHashData : '{}'))
 const jsonData = ref<null | DagJSONObject>(null)
 const nodeData = ref<null | GNode[]>(null)
 const svgRef = ref<null | SVGElement>(null)
@@ -81,6 +83,10 @@ const fetchData = async () => {
       const dataRes: DataSet = await res.json()
       localStorage.setItem('data', JSON.stringify(dataRes))
       apiData.value = dataRes
+      const obj: { [key: string]: string } = {}
+      dataRes.forEach((e) => (obj[e.number] = e.primeForm))
+      localStorage.setItem('hashData', JSON.stringify(obj))
+      hashData.value = obj
     } else {
       console.log('Not 200', res)
     }
@@ -220,12 +226,6 @@ const createDag = async () => {
       prevSelectedSets.value = selectedSets.value
 
       selectedSets.value = getSelectedSets(d)
-
-      const data = localStorage.getItem('data')
-
-      if (!data || !apiData.value.length) {
-        fetchData()
-      }
 
       isVerticalPanelOpen.value = true && verticalPanelToggle.value
       if (!(graphAudioType.value === 'off')) {
@@ -539,6 +539,13 @@ onMounted(async () => {
   } else {
     await useLocalOrFetchAndCreateDag('strictdagprimeforte')
   }
+
+  const data = localStorage.getItem('data')
+  const hashData = localStorage.getItem('hashData')
+  if (!data || !hashData) {
+    fetchData()
+  }
+
   window.addEventListener('resize', updateDimensionsHandler)
 })
 
@@ -577,6 +584,7 @@ onUnmounted(() => {
     :selectedSets="selectedSets"
     :textFieldFocused="textFieldFocused"
     :transposition="transposition"
+    :hashData="hashData"
   ></HorizontalPanel>
   <VerticalPanel
     :class="{ active: focusPanel === 'vertical' }"

@@ -10,6 +10,7 @@ const props = defineProps<{
   selectedSets: string[]
   textFieldFocused: boolean
   transposition: number
+  hashData: { [key: string]: string }
 }>()
 
 let synth = JZZ.synth.Tiny()
@@ -209,6 +210,7 @@ onMounted(() => {
           :transposition="transposition"
           :activeTab="activeTab"
           :player="player"
+          :hashData="hashData"
           @changeIsPlaying="changeIsPlaying"
           @changeMidiLoaded="changeMidiLoaded"
           @changePosition="changePosition"

@@ -16,6 +16,7 @@ const props = defineProps<{
   selectedSets: string[]
   transposition: number
   activeTab: string
+  hashData: { [key: string]: string }
 }>()
 
 const $emit = defineEmits([
@@ -127,6 +128,8 @@ const parse = () => {
       char = src.shift()
       changeLocation(char) // add the length of the whitespace
     }
+
+    if (!firstDelimiterRead) firstDelimiterRead = true
   }
 
   const forteValidation = (token: string, errorStack: string[]): void => {
@@ -142,7 +145,11 @@ const parse = () => {
       return
     }
 
-    // TODO: add a step to validate if the valid formatted forte number exists
+    if (!(token in props.hashData)) {
+      const error = `[${location.lineNumber}:${location.charNumber}] Nonexistent forte token '${token}'`
+      errorStack.push(error)
+      return
+    }
   }
 
   const transpositionValidation = (token: string, errorStack: string[]): void => {
@@ -211,11 +218,6 @@ const parse = () => {
 
   const errorStack: string[] = []
 
-  if (!src.length) {
-    const error = `Cannot parse empty program`
-    errorStack.push(error)
-  }
-
   const location = { lineNumber: 1, charNumber: 0 }
 
   const forteArr: string[] = []
@@ -224,6 +226,7 @@ const parse = () => {
 
   const delimiters = ['F', 'T', '@']
   let currDelimiter = 0
+  let firstDelimiterRead = false
 
   // used to prevent duplicate timestamps
   const seen = new Set()
@@ -246,7 +249,10 @@ const parse = () => {
     }
   }
 
-  if (currDelimiter === 1) {
+  if (!firstDelimiterRead) {
+    const error = `[${location.lineNumber}:${location.charNumber}] Not a valid program, mising delimiters 'F', 'T', and '@'`
+    errorStack.push(error)
+  } else if (currDelimiter === 1) {
     const error = `[${location.lineNumber}:${location.charNumber}] Incomplete program, missing delimiters 'T' and '@'`
     errorStack.push(error)
   } else if (currDelimiter === 2) {
