@@ -65,6 +65,9 @@ const verticalPanelToggle = ref<boolean>(true)
 const isHorizontalPanelOpen = ref<boolean>(false)
 const focusPanel = ref<string>('horizontal')
 const textFieldFocused = ref<boolean>(false)
+const parsedProgram = ref<null | { forte: string; transposition: string; timestamp: string }[]>(
+  null
+)
 
 const prevSelectedSets = ref<string[]>([])
 const selectedSets = ref<string[]>(['["0","1","2","3","4","5","6","7","8","9","T","E"]|12-1'])
@@ -490,6 +493,10 @@ const changeGraphVel = (s: string) => {
   graphVel.value = parseInt(s)
 }
 
+const changeParsedProgram = (d: { forte: string; transposition: string; timestamp: string }[]) => {
+  parsedProgram.value = d
+}
+
 const updateDimensionsHandler = () => {
   d3.select(svgRef.value).attr('width', window.innerWidth).attr('height', window.innerHeight)
 }
@@ -580,11 +587,13 @@ onUnmounted(() => {
     @changeVerticalPanelToggle="changeVerticalPanelToggle"
     @changeGraphVel="changeGraphVel"
     @closeModal="isHorizontalPanelOpen = false"
+    @changeParsedProgram="changeParsedProgram"
     :isHorizontalPanelOpen="isHorizontalPanelOpen"
     :selectedSets="selectedSets"
     :textFieldFocused="textFieldFocused"
     :transposition="transposition"
     :hashData="hashData"
+    :parsedProgram="parsedProgram"
   ></HorizontalPanel>
   <VerticalPanel
     :class="{ active: focusPanel === 'vertical' }"

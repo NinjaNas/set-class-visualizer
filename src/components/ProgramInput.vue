@@ -27,7 +27,8 @@ const $emit = defineEmits([
   'changePlayer',
   'changeIsLooping',
   'jumpPosition',
-  'changePositionText'
+  'changePositionText',
+  'changeParsedProgram'
 ])
 
 const textInput = ref<string>('')
@@ -268,7 +269,7 @@ const parse = () => {
     errorMessages.value = errorStack
     isValidProgram.value = false
   } else {
-    const res = []
+    const res: { forte: string; transposition: string; timestamp: string }[] = []
     for (let i = 0; i < forteArr.length; i++) {
       res.push({
         forte: forteArr[i],
@@ -279,7 +280,7 @@ const parse = () => {
     console.log(res)
     errorMessages.value = null
     isValidProgram.value = true
-    return res // TODO use result to change selectedSet based on timestamp while midi is playing, probably through an emit to d3dag, then pass prop to piano tab
+    $emit('changeParsedProgram', res)
   }
 }
 

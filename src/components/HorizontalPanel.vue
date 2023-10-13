@@ -11,7 +11,14 @@ const props = defineProps<{
   textFieldFocused: boolean
   transposition: number
   hashData: { [key: string]: string }
+  parsedProgram: null | { forte: string; transposition: string; timestamp: string }[]
 }>()
+
+type ParsedProgram = {
+  forte: string
+  transposition: string
+  timestamp: string
+}
 
 let synth = JZZ.synth.Tiny()
 
@@ -194,6 +201,7 @@ onMounted(() => {
           :duration="duration"
           :isMidiLoaded="isMidiLoaded"
           :activeTab="activeTab"
+          :parsedProgram="parsedProgram"
           @changeIsPlaying="changeIsPlaying"
           @changeIsLooping="changeIsLooping"
           @jumpPosition="jumpPosition"
@@ -219,6 +227,7 @@ onMounted(() => {
           @changeIsLooping="changeIsLooping"
           @jumpPosition="jumpPosition"
           @changePositionText="changePositionText"
+          @changeParsedProgram="(d: ParsedProgram[]) => $emit('changeParsedProgram', d)"
         ></ProgramInput>
         <OptionsTab
           v-if="activeTab === 'options'"

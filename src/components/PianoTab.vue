@@ -23,6 +23,7 @@ const props = defineProps<{
   position: number
   duration: number
   activeTab: string
+  parsedProgram: null | { forte: string; transposition: string; timestamp: string }[]
 }>()
 
 const synth = JZZ.synth.Tiny()
