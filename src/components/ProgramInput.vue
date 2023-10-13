@@ -32,8 +32,12 @@ const $emit = defineEmits([
 
 const textInput = ref<string>('')
 const textAreaRef = ref<null | HTMLTextAreaElement>(null)
+const errorMessages = ref<null | string[]>(null)
+const isValidProgram = ref<boolean>(false)
 
 const loadPlayer = (data: string) => {
+  errorMessages.value = null
+  isValidProgram.value = false
   const playerInit = JZZ.MIDI.SMF(data).player()
   $emit('changeMidiLoaded', true)
   $emit('changePlayer', playerInit)
@@ -261,8 +265,8 @@ const parse = () => {
   }
 
   if (errorStack.length) {
-    console.log(errorStack)
-    return errorStack // TODO display error stack
+    errorMessages.value = errorStack
+    isValidProgram.value = false
   } else {
     const res = []
     for (let i = 0; i < forteArr.length; i++) {
@@ -273,7 +277,9 @@ const parse = () => {
       })
     }
     console.log(res)
-    return res // TODO use result to change selectedSet based on timestamp while midi is playing
+    errorMessages.value = null
+    isValidProgram.value = true
+    return res // TODO use result to change selectedSet based on timestamp while midi is playing, probably through an emit to d3dag, then pass prop to piano tab
   }
 }
 
@@ -316,6 +322,11 @@ const textAreaChangeHandler = (additionalLines = 0) => {
         v-model="textInput"
         @input="textAreaChangeHandler()"
       ></textarea>
+      <h2 style="font-weight: bold; text-decoration: underline; padding: 0">Output</h2>
+      <div v-if="isValidProgram">Program parsed successfully!</div>
+      <div v-for="error in errorMessages" :key="error">
+        {{ error }}
+      </div>
     </div>
     <div v-if="activeTab === 'program'" class="piano-inner-grid-container audio-panel-program-tab">
       <h2 style="font-weight: bold; text-decoration: underline; padding: 0">Audio Panel</h2>
