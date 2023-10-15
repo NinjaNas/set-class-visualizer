@@ -123,6 +123,8 @@ const fetchDagData = async (url: string) => {
   }
 }
 
+let initHighlight = () => {}
+
 const createDag = async () => {
   if (!svgRef.value || !jsonData.value) return
 
@@ -280,13 +282,18 @@ const createDag = async () => {
     .call(zoom)
     .call(zoom.transform, d3.zoomIdentity.translate(-centerX, -centerY).scale(MIN_SCALE))
 
-  // init highlight or reset highlight after graph change
-  for (const d of dag.nodes()) {
-    if (d.data === selectedSets.value[0]) {
-      selectedSets.value = getSelectedSets(d)
-      addCurrHighlight(getSelectedSets(d))
+  // init highlight or reset highlight after graph type change
+  initHighlight = () => {
+    removePrevHighlight() // required for switching nodes using parsedProgram
+    for (const d of dag.nodes()) {
+      if (d.data === selectedSets.value[0]) {
+        selectedSets.value = getSelectedSets(d)
+        addCurrHighlight(getSelectedSets(d))
+      }
     }
   }
+
+  initHighlight()
 }
 
 const calcCenter = (scale: number) => {
@@ -497,6 +504,12 @@ const changeParsedProgram = (d: { forte: string; transposition: string; timestam
   parsedProgram.value = d
 }
 
+const changeSelectedSet = (s: string) => {
+  prevSelectedSets.value = selectedSets.value
+  selectedSets.value = [s]
+  initHighlight() // set highlight after selectedSet changed, can be an empty func if createDag is not run yet
+}
+
 const updateDimensionsHandler = () => {
   d3.select(svgRef.value).attr('width', window.innerWidth).attr('height', window.innerHeight)
 }
@@ -588,6 +601,7 @@ onUnmounted(() => {
     @changeGraphVel="changeGraphVel"
     @closeModal="isHorizontalPanelOpen = false"
     @changeParsedProgram="changeParsedProgram"
+    @changeSelectedSet="changeSelectedSet"
     :isHorizontalPanelOpen="isHorizontalPanelOpen"
     :selectedSets="selectedSets"
     :textFieldFocused="textFieldFocused"
@@ -604,7 +618,10 @@ onUnmounted(() => {
     :apiData="apiData"
     @closeModal="isVerticalPanelOpen = false"
   ></VerticalPanel>
-  <HorizontalPanelOpenButton @openModal="isHorizontalPanelOpen = true"></HorizontalPanelOpenButton>
+  <HorizontalPanelOpenButton
+    v-show="!isHorizontalPanelOpen"
+    @openModal="isHorizontalPanelOpen = true"
+  ></HorizontalPanelOpenButton>
 </template>
 
 <style>
