@@ -4,7 +4,6 @@ import PianoTab from '../components/PianoTab.vue'
 import OptionsTab from '../components/OptionsTab.vue'
 import ProgramInput from './ProgramInput.vue'
 import { JZZ } from 'jzz'
-import { transpose } from '@/functions/helpers'
 
 const props = defineProps<{
   isHorizontalPanelOpen: boolean
@@ -168,18 +167,17 @@ watch(
 const getCurrParsedObj = () => {
   if (!props.parsedProgram) return
   const res =
-    JSON.stringify(
-      JSON.parse(props.hashData[props.parsedProgram[currIndexProgram.value].forte]).map(
-        (e: string) =>
-          transpose(e, parseInt(props.parsedProgram![currIndexProgram.value].transposition))
-      )
-    )
+    props.hashData[props.parsedProgram[currIndexProgram.value].forte]
       .replace(/10/, 'T')
       .replace(/11/, 'E') +
     '|' +
     props.parsedProgram[currIndexProgram.value].forte
 
-  $emit('changeSelectedSet', res)
+  $emit(
+    'changeSelectedSet',
+    res,
+    parseInt(props.parsedProgram[currIndexProgram.value].transposition)
+  )
 }
 
 watch([isPlaying, position], ([newIsPlaying], [oldIsPlaying]) => {

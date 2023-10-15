@@ -504,9 +504,10 @@ const changeParsedProgram = (d: { forte: string; transposition: string; timestam
   parsedProgram.value = d
 }
 
-const changeSelectedSet = (s: string) => {
+const changeSelectedSet = (s: string, t: number) => {
   prevSelectedSets.value = selectedSets.value
   selectedSets.value = [s]
+  transposition.value = t
   initHighlight() // set highlight after selectedSet changed, can be an empty func if createDag is not run yet
 }
 
