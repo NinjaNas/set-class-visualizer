@@ -4,6 +4,7 @@ import PianoTab from '../components/PianoTab.vue'
 import OptionsTab from '../components/OptionsTab.vue'
 import ProgramInput from './ProgramInput.vue'
 import { JZZ } from 'jzz'
+import { transpose } from '@/functions/helpers'
 
 const props = defineProps<{
   isHorizontalPanelOpen: boolean
@@ -20,6 +21,19 @@ type ParsedProgram = {
   timestamp: string
 }
 
+const $emit = defineEmits([
+  'focusHorizontal',
+  'closeModal',
+  'changeParsedProgram',
+  'changeGraphText',
+  'changeSelectedSet',
+  'changeVerticalPanelToggle',
+  'useLocalOrFetchAndCreateDag',
+  'changeGraphAudioType',
+  'changeGraphAudioProgram',
+  'changeGraphVel'
+])
+
 let synth = JZZ.synth.Tiny()
 
 const activeTab = ref<string>('piano')
@@ -30,7 +44,8 @@ const containerHeight = ref<null | number>(null)
 const isMidiLoaded = ref<boolean>(false)
 const isPlaying = ref<string>('false')
 const isLooping = ref<boolean>(false)
-const positionId = ref<number[]>([])
+const currIndexProgram = ref<number>(0)
+const positionId = ref<number[]>([]) // for debouncing
 const position = ref<number>(0)
 const duration = ref<number>(0)
 const player = ref<null | any>(null)
@@ -149,6 +164,47 @@ watch(
     player.value.loop(isLooping.value)
   }
 )
+
+const getCurrParsedObj = () => {
+  if (!props.parsedProgram) return
+  const res =
+    JSON.stringify(
+      JSON.parse(props.hashData[props.parsedProgram[currIndexProgram.value].forte]).map(
+        (e: string) =>
+          transpose(e, parseInt(props.parsedProgram![currIndexProgram.value].transposition))
+      )
+    )
+      .replace(/10/, 'T')
+      .replace(/11/, 'E') +
+    '|' +
+    props.parsedProgram[currIndexProgram.value].forte
+
+  $emit('changeSelectedSet', res)
+}
+
+watch([isPlaying, position], ([newIsPlaying], [oldIsPlaying]) => {
+  if (!props.parsedProgram) return
+
+  if (newIsPlaying === 'false' && oldIsPlaying !== 'false') {
+    currIndexProgram.value = 0
+    getCurrParsedObj() // reset highlight
+  } else if (currIndexProgram.value >= props.parsedProgram.length) {
+    return
+  }
+
+  switch (isPlaying.value) {
+    case 'resume':
+    case 'true':
+      if (parseInt(props.parsedProgram[currIndexProgram.value].timestamp) >= position.value) {
+        // get the correct transposed set as a string, reformatted for d3dag
+        getCurrParsedObj()
+        currIndexProgram.value++
+      }
+      break
+    default:
+      break
+  }
+})
 
 onMounted(() => {
   watch(
