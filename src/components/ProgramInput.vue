@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { JZZ } from 'jzz'
 import { SMF } from 'jzz-midi-smf'
 import PlayPanel from './PlayPanel.vue'
@@ -31,14 +31,23 @@ const $emit = defineEmits([
   'changeParsedProgram'
 ])
 
+type ParsedProgram = {
+  forte: string
+  transposition: string
+  timestamp: string
+}
+
 const textInput = ref<string>('')
+const oldTextInput = ref<string>('')
 const textAreaRef = ref<null | HTMLTextAreaElement>(null)
 const errorMessages = ref<null | string[]>(null)
 const isValidProgram = ref<boolean>(false)
+const isModified = ref<boolean>(false)
 
 const loadPlayer = (data: string) => {
   errorMessages.value = null
   isValidProgram.value = false
+  textInput.value = ''
   const playerInit = JZZ.MIDI.SMF(data).player()
   $emit('changeMidiLoaded', true)
   $emit('changePlayer', playerInit)
@@ -265,6 +274,10 @@ const parse = () => {
     errorStack.push(error)
   }
 
+  function compareByTimestamp(a: ParsedProgram, b: ParsedProgram) {
+    return parseInt(a.timestamp) - parseInt(b.timestamp)
+  }
+
   if (errorStack.length) {
     errorMessages.value = errorStack
     isValidProgram.value = false
@@ -277,7 +290,9 @@ const parse = () => {
         timestamp: timestampArr[i]
       })
     }
-    console.log(res)
+
+    res.sort(compareByTimestamp) // sort by increasing timestamp
+
     errorMessages.value = null
     isValidProgram.value = true
     $emit('changeParsedProgram', res)
@@ -292,6 +307,24 @@ const textAreaChangeHandler = (additionalLines = 0) => {
     100
   )}px`
 }
+
+const saveOldTextInput = () => {
+  oldTextInput.value = textInput.value
+}
+
+const handleProgramInput = () => {
+  parse()
+  saveOldTextInput()
+  isModified.value = false
+}
+
+watch(textInput, (newTextInput) => {
+  if (newTextInput === oldTextInput.value) {
+    isModified.value = false
+  } else {
+    isModified.value = true
+  }
+})
 </script>
 
 <template>
@@ -311,7 +344,7 @@ const textAreaChangeHandler = (additionalLines = 0) => {
       <label for="programInput">Program Input:</label>
       <div id="programInput" class="program-buttons">
         <button @click="addCurrentSelection" :disabled="!isMidiLoaded">Add Set @ Time</button>
-        <button @click="parse" :disabled="!isMidiLoaded">Parse Program</button>
+        <button @click="handleProgramInput" :disabled="!isMidiLoaded">Parse Program</button>
       </div>
     </div>
     <div class="import-program-panel">
@@ -324,6 +357,7 @@ const textAreaChangeHandler = (additionalLines = 0) => {
         @input="textAreaChangeHandler()"
       ></textarea>
       <h2 style="font-weight: bold; text-decoration: underline; padding: 0">Output</h2>
+      <div v-if="isModified" style="font-weight: bold">*Current Program Modified</div>
       <div v-if="isValidProgram">Program parsed successfully!</div>
       <div v-for="error in errorMessages" :key="error">
         {{ error }}
