@@ -210,32 +210,39 @@ const findCurrIndex = () => {
   }
 }
 
-watch([isPlaying, position], () => {
-  if (!props.parsedProgram) return
+watch(
+  [currIndexProgram, isPlaying, position],
+  ([newCurrIndex, newIsPlaying], [oldCurrIndex, oldIsPlaying]) => {
+    if (!props.parsedProgram) return
 
-  if (isPlaying.value === 'false') {
-    // need to check on every position change because user can use the slider
-    findCurrIndex()
-    // get the correct transposed set as a string, reformatted for d3dag
-    getCurrParsedObj()
-  }
-
-  if (currIndexProgram.value >= props.parsedProgram.length) {
-    return
-  }
-
-  switch (isPlaying.value) {
-    case 'resume':
-    case 'true':
+    if (isPlaying.value === 'false') {
       // need to check on every position change because user can use the slider
       findCurrIndex()
       // get the correct transposed set as a string, reformatted for d3dag
-      getCurrParsedObj()
-      break
-    default:
-      break
+      if (newCurrIndex !== oldCurrIndex || newIsPlaying !== oldIsPlaying) {
+        getCurrParsedObj()
+      }
+    }
+
+    if (currIndexProgram.value >= props.parsedProgram.length) {
+      return
+    }
+
+    switch (isPlaying.value) {
+      case 'resume':
+      case 'true':
+        // need to check on every position change because user can use the slider
+        findCurrIndex()
+        // get the correct transposed set as a string, reformatted for d3dag
+        if (newCurrIndex !== oldCurrIndex || newIsPlaying !== oldIsPlaying) {
+          getCurrParsedObj()
+        }
+        break
+      default:
+        break
+    }
   }
-})
+)
 
 onMounted(() => {
   watch(
