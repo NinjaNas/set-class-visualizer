@@ -175,6 +175,11 @@ watch(
   padding: 0.2em;
 }
 
+.play-panel-button:focus {
+  border: 1px solid var(--color-active);
+  box-shadow: 0px 0px 10px var(--color-active);
+}
+
 .play-panel-button-disabled {
   background-color: transparent;
   border: 1px solid var(--color-accent);
