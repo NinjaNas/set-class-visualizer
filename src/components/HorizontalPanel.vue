@@ -180,10 +180,22 @@ const getCurrParsedObj = () => {
   )
 }
 
-watch([isPlaying, position], ([newIsPlaying], [oldIsPlaying]) => {
+// users can move the slider so a check is needed to find the correct index
+const findCurrIndex = () => {
+  if (!props.parsedProgram) return
+  // decrement to find the first timestamp less than the current position
+  for (let i = props.parsedProgram.length - 1; i >= 0; i--) {
+    if (parseInt(props.parsedProgram[i].timestamp) <= position.value) {
+      currIndexProgram.value = i
+      return
+    }
+  }
+}
+
+watch([isPlaying, position], () => {
   if (!props.parsedProgram) return
 
-  if (newIsPlaying === 'false' && oldIsPlaying !== 'false') {
+  if (isPlaying.value === 'false') {
     currIndexProgram.value = 0
     getCurrParsedObj() // reset highlight
   } else if (currIndexProgram.value >= props.parsedProgram.length) {
@@ -193,11 +205,10 @@ watch([isPlaying, position], ([newIsPlaying], [oldIsPlaying]) => {
   switch (isPlaying.value) {
     case 'resume':
     case 'true':
-      if (parseInt(props.parsedProgram[currIndexProgram.value].timestamp) >= position.value) {
-        // get the correct transposed set as a string, reformatted for d3dag
-        getCurrParsedObj()
-        currIndexProgram.value++
-      }
+      // need to check on every position change because user can use the slider
+      findCurrIndex()
+      // get the correct transposed set as a string, reformatted for d3dag
+      getCurrParsedObj()
       break
     default:
       break
