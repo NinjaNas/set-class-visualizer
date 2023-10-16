@@ -114,6 +114,7 @@ watch(
     >
   </div>
   <input
+    :disabled="!isMidiLoaded"
     type="range"
     min="0"
     :max="duration"
