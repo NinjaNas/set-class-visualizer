@@ -219,9 +219,7 @@ watch(
       // need to check on every position change because user can use the slider
       findCurrIndex()
       // get the correct transposed set as a string, reformatted for d3dag
-      if (newCurrIndex !== oldCurrIndex || newIsPlaying !== oldIsPlaying) {
-        getCurrParsedObj()
-      }
+      getCurrParsedObj()
     }
 
     if (currIndexProgram.value >= props.parsedProgram.length) {
