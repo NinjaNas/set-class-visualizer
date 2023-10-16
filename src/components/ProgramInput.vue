@@ -37,8 +37,9 @@ type ParsedProgram = {
   timestamp: string
 }
 
-const textInput = ref<string>('')
-const oldTextInput = ref<string>('')
+const localTextInput = localStorage.getItem('textInput')
+const textInput = ref<string>(localTextInput ? localTextInput : '')
+const oldTextInput = ref<string>(localTextInput ? localTextInput : '')
 const textAreaRef = ref<null | HTMLTextAreaElement>(null)
 const errorMessages = ref<null | string[]>(null)
 const isValidProgram = ref<boolean>(false)
@@ -47,7 +48,6 @@ const isModified = ref<boolean>(false)
 const loadPlayer = (data: string) => {
   errorMessages.value = null
   isValidProgram.value = false
-  textInput.value = ''
   const playerInit = JZZ.MIDI.SMF(data).player()
   $emit('changeMidiLoaded', true)
   $emit('changePlayer', playerInit)
@@ -322,6 +322,7 @@ watch(textInput, (newTextInput) => {
   if (newTextInput === oldTextInput.value) {
     isModified.value = false
   } else {
+    localStorage.setItem('textInput', newTextInput)
     isModified.value = true
   }
 })
