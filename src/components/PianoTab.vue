@@ -189,9 +189,11 @@ const enableKeypress = () => {
   })
   connectPiano()
   changeFilter()
+  window.addEventListener('keydown', keydownHandler)
 }
 
 const disableKeypress = () => {
+  window.removeEventListener('keydown', keydownHandler)
   disconnectPiano()
   ascii.value.close()
   filter.value = JZZ.Widget()
@@ -250,7 +252,7 @@ const limitNotes = () => {
   changeFilter()
 
   const styles = {
-    disableKey: { backgroundColor: 'red', transition: 'background-color .5s ease-in-out' },
+    disableKey: { backgroundColor: 'red', transition: 'background-color .1s ease-in-out' },
     enableBlackKey: { backgroundColor: 'var(--offblack)', transition: 'none' },
     enableBlackKeyPressed: { backgroundColor: '#888', transition: 'none' },
     enableWhiteKey: { backgroundColor: 'var(--offwhite)', transition: 'none' },
