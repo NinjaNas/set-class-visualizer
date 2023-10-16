@@ -2,7 +2,7 @@
 import { ref, watch } from 'vue'
 
 const localPianoVel = localStorage.getItem('pianoVelocity')
-const pianoVel = ref<string>(localPianoVel ? localPianoVel : '60')
+const pianoVel = ref<string>(localPianoVel ? localPianoVel : '127')
 
 const $emit = defineEmits(['changePianoVel'])
 

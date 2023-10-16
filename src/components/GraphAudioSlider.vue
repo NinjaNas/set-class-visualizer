@@ -2,7 +2,7 @@
 import { ref, watch } from 'vue'
 
 const localGraphVel = localStorage.getItem('graphVelocity')
-const graphVel = ref<string>(localGraphVel ? localGraphVel : '60')
+const graphVel = ref<string>(localGraphVel ? localGraphVel : '127')
 
 const $emit = defineEmits(['changeGraphVel'])
 
