@@ -183,10 +183,28 @@ const getCurrParsedObj = () => {
 // users can move the slider so a check is needed to find the correct index
 const findCurrIndex = () => {
   if (!props.parsedProgram) return
-  // decrement to find the first timestamp less than the current position
-  for (let i = props.parsedProgram.length - 1; i >= 0; i--) {
-    if (parseInt(props.parsedProgram[i].timestamp) <= position.value) {
-      currIndexProgram.value = i
+
+  // partial binary search
+  let low = 0
+  let high = props.parsedProgram.length - 1
+
+  while (low <= high) {
+    const mid = Math.floor((low + high) / 2)
+
+    if (parseInt(props.parsedProgram[mid].timestamp) > position.value) {
+      high = mid - 1
+    } else if (parseInt(props.parsedProgram[mid].timestamp) < position.value) {
+      low = mid
+      // decrement to find the first timestamp less than the current position
+      for (let i = high; i >= low; i--) {
+        if (parseInt(props.parsedProgram[i].timestamp) <= position.value) {
+          currIndexProgram.value = i
+          return
+        }
+      }
+      return
+    } else {
+      currIndexProgram.value = mid
       return
     }
   }
@@ -196,9 +214,13 @@ watch([isPlaying, position], () => {
   if (!props.parsedProgram) return
 
   if (isPlaying.value === 'false') {
-    currIndexProgram.value = 0
-    getCurrParsedObj() // reset highlight
-  } else if (currIndexProgram.value >= props.parsedProgram.length) {
+    // need to check on every position change because user can use the slider
+    findCurrIndex()
+    // get the correct transposed set as a string, reformatted for d3dag
+    getCurrParsedObj()
+  }
+
+  if (currIndexProgram.value >= props.parsedProgram.length) {
     return
   }
 
