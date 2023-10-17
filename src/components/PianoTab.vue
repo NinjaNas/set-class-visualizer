@@ -202,6 +202,9 @@ const changeFilter = () => {
       // emit if note in array
       if (notes.value!.includes(msg[1].toString())) {
         this._emit(msg)
+      } else {
+        msg[2] = 0
+        this._emit(msg)
       }
     }
   })
