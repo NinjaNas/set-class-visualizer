@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 
 const darkMode = ref<boolean>(false)
 
@@ -7,6 +7,7 @@ const setTheme = () => {
   const storedTheme = localStorage.getItem('theme')
 
   if (!storedTheme) {
+    console.log(window.matchMedia('(prefers-color-scheme: dark)').matches)
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
       document.body.setAttribute('data-theme', 'dark')
       localStorage.setItem('theme', 'dark')
@@ -22,12 +23,14 @@ const setTheme = () => {
   }
 }
 
-setTheme()
-
 watch(darkMode, () => {
   const theme = darkMode.value ? 'dark' : 'light'
   document.body.setAttribute('data-theme', theme)
   localStorage.setItem('theme', theme)
+})
+
+onMounted(() => {
+  darkMode.value = setTheme()
 })
 </script>
 
