@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 
+const props = defineProps<{
+  firstInteraction: boolean
+}>()
+
 const localSwitchMidi = localStorage.getItem('midiChannel')
 const switchMidi = ref<string>(localSwitchMidi ? localSwitchMidi : '0')
 
@@ -11,7 +15,7 @@ const handleSelectChange = (e: Event) => {
   target.blur()
 }
 
-watch(switchMidi, () => {
+watch([switchMidi, () => props.firstInteraction], () => {
   $emit('changeMidiChannel', switchMidi.value)
   localStorage.setItem('midiChannel', switchMidi.value)
 })

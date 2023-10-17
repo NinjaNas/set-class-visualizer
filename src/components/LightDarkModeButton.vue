@@ -1,6 +1,28 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-const darkMode = ref<boolean>(localStorage.getItem('theme') === 'dark' ? true : false)
+
+const darkMode = ref<boolean>(false)
+
+const setTheme = () => {
+  const storedTheme = localStorage.getItem('theme')
+
+  if (!storedTheme) {
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      document.body.setAttribute('data-theme', 'dark')
+      localStorage.setItem('theme', 'dark')
+      return true
+    } else {
+      document.body.setAttribute('data-theme', 'light')
+      localStorage.setItem('theme', 'light')
+      return false
+    }
+  } else {
+    document.body.setAttribute('data-theme', storedTheme)
+    return storedTheme === 'dark' ? true : false
+  }
+}
+
+setTheme()
 
 watch(darkMode, () => {
   const theme = darkMode.value ? 'dark' : 'light'
@@ -10,7 +32,7 @@ watch(darkMode, () => {
 </script>
 
 <template>
-  <label for="darkModeButton">Toggle Dark Mode</label>
+  <label for="darkModeButton">Toggle Dark Mode:</label>
   <label class="switch">
     <input id="darkModeButton" type="checkbox" @click="darkMode = !darkMode" :checked="darkMode" />
     <span class="slider"></span>

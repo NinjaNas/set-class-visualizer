@@ -19,5 +19,5 @@ export const transpose = (n: string, t: number): string => {
   if (!n) {
     return ''
   }
-  return ((parseInt(n) + t) % 12).toString()
+  return ((parseInt(n.replace(/T/, '10').replace(/E/, '11')) + t) % 12).toString()
 }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import {
   formatSetToString,
   toFormattedPrimeFormArray,
@@ -9,13 +9,15 @@ import {
 import VerticalPanel from './VerticalPanel.vue'
 import HorizontalPanel from './HorizontalPanel.vue'
 import HorizontalPanelOpenButton from './HorizontalPanelOpenButton.vue'
+import DagFooter from './DagFooter.vue'
 import GraphPanel from './GraphPanel.vue'
 import * as d3 from 'd3'
 import { graphJson } from 'd3-dag'
 import { JZZ } from 'jzz'
 import { Tiny } from 'jzz-synth-tiny'
 Tiny(JZZ)
-const synth = JZZ.synth.Tiny()
+
+let synth: null | any = null
 
 import type { MutGraphNode, MutGraphLink } from 'd3-dag'
 type Link = { source: string; target: string }
@@ -45,26 +47,30 @@ const MAX_SCALE = 30
 const abortController = new AbortController()
 const localData = localStorage.getItem('data')
 const apiData = ref<DataSet>(JSON.parse(localData ? localData : '[]'))
+const localHashData = localStorage.getItem('hashData')
+const hashData = ref<{ [key: string]: string }>(JSON.parse(localHashData ? localHashData : '{}'))
 const jsonData = ref<null | DagJSONObject>(null)
 const nodeData = ref<null | GNode[]>(null)
 const svgRef = ref<null | SVGElement>(null)
 const graphSize = ref<{ width: number; height: number }>({ width: 0, height: 0 })
 const zoomRef = ref<number>(0.1)
-const localProgram = localStorage.getItem('graphAudioProgram')
-const localProgramNum = localProgram ? parseInt(localProgram) : 0 // even if localProgram == 0 returns false, it will still return 0
-const program = ref<number>(localProgramNum)
-const localGraphVel = localStorage.getItem('graphVel')
-const localGraphVelNum = localGraphVel ? parseInt(localGraphVel) : localGraphVel === '0' ? 0 : 60 // even if localProgram == 0 returns false, it will still return 0
-const graphVel = ref<number>(localGraphVelNum)
+const program = ref<number>(0)
+const graphVel = ref<number>(60)
 const transposition = ref<number>(0)
 const graphAudioOctave = ref<number>(4)
 const isVerticalPanelOpen = ref<boolean>(false)
+const isHighlightProgram = ref<boolean>(true)
 const verticalPanelToggle = ref<boolean>(true)
 const isHorizontalPanelOpen = ref<boolean>(false)
 const focusPanel = ref<string>('horizontal')
 const textFieldFocused = ref<boolean>(false)
+const parsedProgram = ref<null | { forte: string; transposition: string; timestamp: string }[]>(
+  null
+)
+const firstInteraction = ref<boolean>(false)
 
 const prevSelectedSets = ref<string[]>([])
+const prevClickedSelectedSets = ref<string[]>([])
 const selectedSets = ref<string[]>(['["0","1","2","3","4","5","6","7","8","9","T","E"]|12-1'])
 
 const currNoteQueue = ref<string[]>([])
@@ -81,6 +87,10 @@ const fetchData = async () => {
       const dataRes: DataSet = await res.json()
       localStorage.setItem('data', JSON.stringify(dataRes))
       apiData.value = dataRes
+      const obj: { [key: string]: string } = {}
+      dataRes.forEach((e) => (obj[e.number] = e.primeForm))
+      localStorage.setItem('hashData', JSON.stringify(obj))
+      hashData.value = obj
     } else {
       console.log('Not 200', res)
     }
@@ -114,17 +124,19 @@ const fetchDagData = async (url: string) => {
   }
 }
 
+let initHighlight = () => {}
+
 const createDag = async () => {
   if (!svgRef.value || !jsonData.value) return
 
-  const removePrevHighlight = () => {
-    if (!prevSelectedSets.value.length) return
+  const removePrevHighlight = (currOnHoverSets: string[]) => {
+    if (!currOnHoverSets.length) return
 
     const nodesFilter = (n: GNode) =>
-      prevSelectedSets.value.includes(n.data) && !selectedSets.value.includes(n.data)
+      currOnHoverSets.includes(n.data) && !selectedSets.value.includes(n.data)
 
     const linksFilter = (l: GLink) =>
-      l.source.data === prevSelectedSets.value[0] && l.source.data !== selectedSets.value[0]
+      l.source.data === currOnHoverSets[0] && l.source.data !== selectedSets.value[0]
 
     nodes
       .filter((n) => nodesFilter(n))
@@ -217,22 +229,22 @@ const createDag = async () => {
     .append('g')
     .attr('transform', ({ x, y }) => `translate(${x}, ${y})`)
     .on('click', (event, d) => {
+      if (!synth) {
+        synth = JZZ.synth.Tiny()
+      }
+
       prevSelectedSets.value = selectedSets.value
 
       selectedSets.value = getSelectedSets(d)
 
-      const data = localStorage.getItem('data')
-
-      if (!data || !apiData.value.length) {
-        fetchData()
-      }
+      prevClickedSelectedSets.value = selectedSets.value
 
       isVerticalPanelOpen.value = true && verticalPanelToggle.value
       if (!(graphAudioType.value === 'off')) {
         playAudio()
       }
 
-      removePrevHighlight()
+      removePrevHighlight(prevSelectedSets.value)
     })
     .on('mouseover', (event, d) => {
       addCurrHighlight(getSelectedSets(d))
@@ -277,13 +289,19 @@ const createDag = async () => {
     .call(zoom)
     .call(zoom.transform, d3.zoomIdentity.translate(-centerX, -centerY).scale(MIN_SCALE))
 
-  // init highlight or reset highlight after graph change
-  for (const d of dag.nodes()) {
-    if (d.data === selectedSets.value[0]) {
-      selectedSets.value = getSelectedSets(d)
-      addCurrHighlight(getSelectedSets(d))
+  // init highlight or reset highlight after graph type change
+  initHighlight = () => {
+    removePrevHighlight(prevClickedSelectedSets.value)
+    removePrevHighlight(prevSelectedSets.value) // required for switching nodes using parsedProgram
+    for (const d of dag.nodes()) {
+      if (d.data === selectedSets.value[0]) {
+        selectedSets.value = getSelectedSets(d)
+        addCurrHighlight(getSelectedSets(d))
+      }
     }
   }
+
+  initHighlight()
 }
 
 const calcCenter = (scale: number) => {
@@ -486,8 +504,32 @@ const changeVerticalPanelToggle = (b: boolean) => {
   }
 }
 
+const changeHighlightProgram = (b: boolean) => {
+  isHighlightProgram.value = b
+}
+
 const changeGraphVel = (s: string) => {
   graphVel.value = parseInt(s)
+}
+
+const changeParsedProgram = (d: { forte: string; transposition: string; timestamp: string }[]) => {
+  parsedProgram.value = d
+}
+
+// process program
+const changeSelectedSet = (s: string, t: number) => {
+  prevSelectedSets.value = selectedSets.value
+  selectedSets.value = [s]
+  transposition.value = t
+  if (isHighlightProgram.value) {
+    initHighlight() // set highlight after selectedSet changed, can be an empty func if createDag is not run yet
+  }
+}
+
+const handleFirstInteraction = () => {
+  if (!firstInteraction.value) {
+    firstInteraction.value = true
+  }
 }
 
 const updateDimensionsHandler = () => {
@@ -532,6 +574,12 @@ const useLocalOrFetchAndCreateDag = async (dagStr: string) => {
   }
 }
 
+watch(firstInteraction, () => {
+  document.removeEventListener('click', handleFirstInteraction)
+
+  synth = JZZ.synth.Tiny()
+})
+
 onMounted(async () => {
   const currDag = localStorage.getItem('dag')
   if (currDag) {
@@ -539,6 +587,14 @@ onMounted(async () => {
   } else {
     await useLocalOrFetchAndCreateDag('strictdagprimeforte')
   }
+
+  const data = localStorage.getItem('data')
+  const hashData = localStorage.getItem('hashData')
+  if (!data || !hashData) {
+    fetchData()
+  }
+
+  document.addEventListener('click', handleFirstInteraction)
   window.addEventListener('resize', updateDimensionsHandler)
 })
 
@@ -548,6 +604,7 @@ onUnmounted(() => {
     clearInterval(id)
   }
   window.removeEventListener('resize', updateDimensionsHandler)
+  document.removeEventListener('click', handleFirstInteraction)
 })
 </script>
 
@@ -573,10 +630,16 @@ onUnmounted(() => {
     @changeVerticalPanelToggle="changeVerticalPanelToggle"
     @changeGraphVel="changeGraphVel"
     @closeModal="isHorizontalPanelOpen = false"
+    @changeParsedProgram="changeParsedProgram"
+    @changeSelectedSet="changeSelectedSet"
+    @changeHighlightProgram="changeHighlightProgram"
     :isHorizontalPanelOpen="isHorizontalPanelOpen"
     :selectedSets="selectedSets"
     :textFieldFocused="textFieldFocused"
     :transposition="transposition"
+    :hashData="hashData"
+    :parsedProgram="parsedProgram"
+    :firstInteraction="firstInteraction"
   ></HorizontalPanel>
   <VerticalPanel
     :class="{ active: focusPanel === 'vertical' }"
@@ -587,7 +650,11 @@ onUnmounted(() => {
     :apiData="apiData"
     @closeModal="isVerticalPanelOpen = false"
   ></VerticalPanel>
-  <HorizontalPanelOpenButton @openModal="isHorizontalPanelOpen = true"></HorizontalPanelOpenButton>
+  <HorizontalPanelOpenButton
+    v-show="!isHorizontalPanelOpen"
+    @openModal="isHorizontalPanelOpen = true"
+  ></HorizontalPanelOpenButton>
+  <DagFooter></DagFooter>
 </template>
 
 <style>

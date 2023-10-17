@@ -2,14 +2,40 @@
 import { nextTick, onMounted, ref, watch } from 'vue'
 import PianoTab from '../components/PianoTab.vue'
 import OptionsTab from '../components/OptionsTab.vue'
-import ComposeInput from './ComposeInput.vue'
+import ProgramInput from './ProgramInput.vue'
+import { JZZ } from 'jzz'
 
 const props = defineProps<{
   isHorizontalPanelOpen: boolean
   selectedSets: string[]
   textFieldFocused: boolean
   transposition: number
+  hashData: { [key: string]: string }
+  parsedProgram: null | { forte: string; transposition: string; timestamp: string }[]
+  firstInteraction: boolean
 }>()
+
+type ParsedProgram = {
+  forte: string
+  transposition: string
+  timestamp: string
+}
+
+const $emit = defineEmits([
+  'focusHorizontal',
+  'closeModal',
+  'changeParsedProgram',
+  'changeGraphText',
+  'changeSelectedSet',
+  'changeVerticalPanelToggle',
+  'useLocalOrFetchAndCreateDag',
+  'changeGraphAudioType',
+  'changeGraphAudioProgram',
+  'changeGraphVel',
+  'changeHighlightProgram'
+])
+
+let synth: null | any = null
 
 const activeTab = ref<string>('piano')
 const selectedMidiIn = ref<string>('')
@@ -18,19 +44,20 @@ const container = ref<null | HTMLDivElement>(null)
 const containerHeight = ref<null | number>(null)
 const isMidiLoaded = ref<boolean>(false)
 const isPlaying = ref<string>('false')
-const isPaused = ref<boolean>(false)
 const isLooping = ref<boolean>(false)
-const positionId = ref<number[]>([])
+const currIndexProgram = ref<number>(0)
+const positionId = ref<number[]>([]) // for debouncing
 const position = ref<number>(0)
 const duration = ref<number>(0)
 const player = ref<null | any>(null)
+const positionDebounce = ref<number>(100)
 
 const changeMidiIn = (s: string) => {
-  selectedMidiIn.value = s
+  selectedMidiIn.value = s ? s : ''
 }
 
 const changeMidiOut = (s: string) => {
-  selectedMidiOut.value = s
+  selectedMidiOut.value = s ? s : ''
 }
 
 const changeIsPlaying = (s: string) => {
@@ -47,6 +74,7 @@ const changeMidiLoaded = (b: boolean) => {
 
 const changePlayer = (a: any) => {
   player.value = a
+  player.value.connect(synth)
   position.value = player.value.positionMS()
   duration.value = player.value.durationMS()
 }
@@ -55,9 +83,14 @@ const changePosition = () => {
   positionId.value.push(
     setInterval(() => {
       position.value = player.value.positionMS()
-    }, 100)
+    }, positionDebounce.value)
   )
   duration.value = player.value.durationMS()
+  player.value.onEnd = function () {
+    if (!isLooping.value) {
+      changeIsPlaying('false')
+    }
+  }
 }
 
 const changeStopPosition = () => {
@@ -103,6 +136,121 @@ const resizeHandler = (event: MouseEvent) => {
   document.addEventListener('mouseup', stopResizing)
 }
 
+watch(isPlaying, () => {
+  switch (isPlaying.value) {
+    case 'false':
+      player.value.stop()
+      changeStopPosition()
+      break
+    case 'pause':
+      player.value.pause()
+      changeStopPosition()
+      break
+    case 'resume':
+      player.value.resume()
+      changePosition()
+      break
+    case 'true':
+      player.value.resume()
+      changePosition()
+      break
+  }
+})
+
+watch(isLooping, () => {
+  player.value.loop(isLooping.value)
+})
+
+const getCurrParsedObj = () => {
+  if (!props.parsedProgram) return
+  const res =
+    props.hashData[props.parsedProgram[currIndexProgram.value].forte]
+      .replace(/10/, 'T')
+      .replace(/11/, 'E') +
+    '|' +
+    props.parsedProgram[currIndexProgram.value].forte
+
+  $emit(
+    'changeSelectedSet',
+    res,
+    parseInt(props.parsedProgram[currIndexProgram.value].transposition)
+  )
+}
+
+// users can move the slider so a check is needed to find the correct index
+const findCurrIndex = () => {
+  if (!props.parsedProgram) return
+
+  // partial binary search
+  let low = 0
+  let high = props.parsedProgram.length - 1
+
+  while (low <= high) {
+    const mid = Math.floor((low + high) / 2)
+
+    if (parseInt(props.parsedProgram[mid].timestamp) > position.value) {
+      high = mid - 1
+    } else if (parseInt(props.parsedProgram[mid].timestamp) < position.value) {
+      low = mid
+      // decrement to find the first timestamp less than the current position
+      for (let i = high; i >= low; i--) {
+        if (parseInt(props.parsedProgram[i].timestamp) <= position.value) {
+          currIndexProgram.value = i
+          return
+        }
+      }
+      return
+    } else {
+      currIndexProgram.value = mid
+      return
+    }
+  }
+}
+
+const changePositionDebounce = (s: string) => {
+  positionDebounce.value = parseInt(s)
+  isPlaying.value = 'false' // stop player because positionDebounce needs a reset to work
+}
+
+watch(
+  [currIndexProgram, isPlaying, position],
+  ([newCurrIndex, newIsPlaying], [oldCurrIndex, oldIsPlaying]) => {
+    if (!props.parsedProgram) return
+
+    if (isPlaying.value === 'false') {
+      // need to check on every position change because user can use the slider
+      findCurrIndex()
+      // get the correct transposed set as a string, reformatted for d3dag
+      getCurrParsedObj()
+    }
+
+    if (currIndexProgram.value >= props.parsedProgram.length) {
+      return
+    }
+
+    switch (isPlaying.value) {
+      case 'resume':
+      case 'true':
+        // need to check on every position change because user can use the slider
+        findCurrIndex()
+        // get the correct transposed set as a string, reformatted for d3dag
+        if (newCurrIndex !== oldCurrIndex || newIsPlaying !== oldIsPlaying) {
+          getCurrParsedObj()
+        }
+        break
+      default:
+        break
+    }
+  }
+)
+
+watch(
+  () => props.firstInteraction,
+  () => {
+    synth = JZZ.synth.Tiny()
+  }
+)
+
 onMounted(() => {
   watch(
     () => props.isHorizontalPanelOpen,
@@ -134,8 +282,8 @@ onMounted(() => {
           <li @click="activeTab = 'piano'" :class="{ 'active-color': activeTab === 'piano' }">
             Piano
           </li>
-          <li @click="activeTab = 'compose'" :class="{ 'active-color': activeTab === 'compose' }">
-            Compose
+          <li @click="activeTab = 'program'" :class="{ 'active-color': activeTab === 'program' }">
+            Program
           </li>
           <li @click="activeTab = 'options'" :class="{ 'active-color': activeTab === 'options' }">
             Options
@@ -150,33 +298,51 @@ onMounted(() => {
           :selectedMidiOut="selectedMidiOut"
           :isPlaying="isPlaying"
           :isLooping="isLooping"
-          :isPaused="isPaused"
           :position="position"
           :duration="duration"
           :isMidiLoaded="isMidiLoaded"
+          :activeTab="activeTab"
+          :parsedProgram="parsedProgram"
+          :firstInteraction="firstInteraction"
           @changeIsPlaying="changeIsPlaying"
           @changeIsLooping="changeIsLooping"
           @jumpPosition="jumpPosition"
           @changePositionText="changePositionText"
         ></PianoTab>
-        <ComposeInput
-          v-show="activeTab === 'compose'"
+        <ProgramInput
+          v-show="activeTab === 'program'"
           :isPlaying="isPlaying"
           :isLooping="isLooping"
+          :isMidiLoaded="isMidiLoaded"
+          :position="position"
+          :duration="duration"
+          :selectedSets="selectedSets"
+          :transposition="transposition"
+          :activeTab="activeTab"
+          :player="player"
+          :hashData="hashData"
+          :firstInteraction="firstInteraction"
           @changeIsPlaying="changeIsPlaying"
           @changeMidiLoaded="changeMidiLoaded"
           @changePosition="changePosition"
           @changeStopPosition="changeStopPosition"
           @changePlayer="changePlayer"
-        ></ComposeInput>
+          @changeIsLooping="changeIsLooping"
+          @jumpPosition="jumpPosition"
+          @changePositionText="changePositionText"
+          @changeParsedProgram="(d: ParsedProgram[]) => $emit('changeParsedProgram', d)"
+        ></ProgramInput>
         <OptionsTab
           v-show="activeTab === 'options'"
+          :firstInteraction="firstInteraction"
           @changeGraphText="(d: string) => $emit('changeGraphText', d)"
           @changeVerticalPanelToggle="(d: boolean) => $emit('changeVerticalPanelToggle', d)"
           @useLocalOrFetchAndCreateDag="(d: string) => $emit('useLocalOrFetchAndCreateDag', d)"
           @changeGraphAudioType="(d: string) => $emit('changeGraphAudioType', d)"
           @changeGraphAudioProgram="(d: string) => $emit('changeGraphAudioProgram', d)"
           @changeGraphVel="(d: string) => $emit('changeGraphVel', d)"
+          @changeHighlightProgram="(d: boolean) => $emit('changeHighlightProgram', d)"
+          @changePositionDebounce="changePositionDebounce"
           @changeMidiIn="changeMidiIn"
           @changeMidiOut="changeMidiOut"
         ></OptionsTab>
@@ -258,22 +424,22 @@ ul.tabs li:hover {
   padding-right: 0.5em;
 }
 
-@media only screen and (min-width: 1024px) {
-  .tabs {
-    padding: 1% 0 0 1%;
-    justify-content: initial;
-  }
-  ul.tabs li {
-    min-width: 100px;
-  }
-}
-
 @media only screen and (min-width: 480px) {
   .menuCloseHorizontal:before {
     font-size: 2.5em;
   }
   .horizontal-container {
     height: 400px;
+  }
+}
+
+@media only screen and (min-width: 1280px) {
+  .tabs {
+    padding: 1% 0 0 1%;
+    justify-content: initial;
+  }
+  ul.tabs li {
+    min-width: 100px;
   }
 }
 
