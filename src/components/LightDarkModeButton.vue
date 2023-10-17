@@ -7,7 +7,6 @@ const setTheme = () => {
   const storedTheme = localStorage.getItem('theme')
 
   if (!storedTheme) {
-    console.log(window.matchMedia('(prefers-color-scheme: dark)').matches)
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
       document.body.setAttribute('data-theme', 'dark')
       localStorage.setItem('theme', 'dark')
