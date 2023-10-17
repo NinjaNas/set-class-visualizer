@@ -332,6 +332,7 @@ const changeMidiChannel = (s: string) => {
   midiChannel.value = parseInt(s)
   disconnectPiano()
   setPiano(midiChannel.value)
+  ascii.value.close()
   setAscii(midiChannel.value)
   connectPiano()
   limitNotes()
