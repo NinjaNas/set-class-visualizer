@@ -31,7 +31,8 @@ const $emit = defineEmits([
   'useLocalOrFetchAndCreateDag',
   'changeGraphAudioType',
   'changeGraphAudioProgram',
-  'changeGraphVel'
+  'changeGraphVel',
+  'changeHighlightProgram'
 ])
 
 let synth: null | any = null
@@ -49,6 +50,7 @@ const positionId = ref<number[]>([]) // for debouncing
 const position = ref<number>(0)
 const duration = ref<number>(0)
 const player = ref<null | any>(null)
+const positionDebounce = ref<number>(100)
 
 const changeMidiIn = (s: string) => {
   selectedMidiIn.value = s ? s : ''
@@ -81,7 +83,7 @@ const changePosition = () => {
   positionId.value.push(
     setInterval(() => {
       position.value = player.value.positionMS()
-    }, 100)
+    }, positionDebounce.value)
   )
   duration.value = player.value.durationMS()
   player.value.onEnd = function () {
@@ -203,6 +205,11 @@ const findCurrIndex = () => {
       return
     }
   }
+}
+
+const changePositionDebounce = (s: string) => {
+  positionDebounce.value = parseInt(s)
+  isPlaying.value = 'false' // stop player because positionDebounce needs a reset to work
 }
 
 watch(
@@ -334,6 +341,8 @@ onMounted(() => {
           @changeGraphAudioType="(d: string) => $emit('changeGraphAudioType', d)"
           @changeGraphAudioProgram="(d: string) => $emit('changeGraphAudioProgram', d)"
           @changeGraphVel="(d: string) => $emit('changeGraphVel', d)"
+          @changeHighlightProgram="(d: boolean) => $emit('changeHighlightProgram', d)"
+          @changePositionDebounce="changePositionDebounce"
           @changeMidiIn="changeMidiIn"
           @changeMidiOut="changeMidiOut"
         ></OptionsTab>
