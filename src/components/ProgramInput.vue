@@ -47,7 +47,7 @@ const isValidProgram = ref<boolean>(false)
 const isModified = ref<boolean>(false)
 const localProgramSelect = localStorage.getItem('programSelect')
 const programSelect = ref<string>(
-  localProgramSelect ? localProgramSelect : '../assets/blue-bossa-modal'
+  localProgramSelect ? localProgramSelect : 'src/assets/blue-bossa-modal'
 )
 const isCustom = ref<boolean>(false)
 
@@ -407,7 +407,7 @@ watch([programSelect, () => props.firstInteraction], () => {
       <div>
         <label for="programSelect">Program Select:</label>
         <select id="programSelect" name="programSelect" v-model="programSelect">
-          <option value="../assets/blue-bossa-modal">Blue Bossa (Modal)</option>
+          <option value="src/assets/blue-bossa-modal">Blue Bossa (Modal)</option>
           <option value="custom">Custom</option>
         </select>
       </div>
