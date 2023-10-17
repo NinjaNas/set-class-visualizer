@@ -2,6 +2,10 @@
 import { ref, watch } from 'vue'
 import { JZZ } from 'jzz'
 
+const props = defineProps<{
+  firstInteraction: boolean
+}>()
+
 const localMidiOut = localStorage.getItem('midiOut')
 const midiOut = ref<string>(localMidiOut ? localMidiOut : '')
 const midiOutArr = ref<
@@ -40,7 +44,14 @@ watch(midiOut, () => {
   localStorage.setItem('midiOut', midiOut.value)
 })
 
-setMidiOut()
+watch(
+  () => props.firstInteraction,
+  () => {
+    setMidiOut()
+    $emit('changeMidiOut', midiOut.value)
+    localStorage.setItem('midiOut', midiOut.value)
+  }
+)
 </script>
 
 <template>

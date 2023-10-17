@@ -8,6 +8,10 @@ import MIDIOutButton from './MIDIOutButton.vue'
 import PrimeForteButtonVue from './PrimeForteButton.vue'
 import SwitchDagButton from './SwitchDagButton.vue'
 import ToggleVerticalPanelButton from './ToggleVerticalPanelButton.vue'
+
+defineProps<{
+  firstInteraction: boolean
+}>()
 </script>
 
 <template>
@@ -35,8 +39,14 @@ import ToggleVerticalPanelButton from './ToggleVerticalPanelButton.vue'
       @changeGraphVel="(d: string) => $emit('changeGraphVel', d)"
     ></GraphAudioSlider>
     <h2 class="col-span-2-option-header">Midi</h2>
-    <MIDIInButton @changeMidiIn="(d: string) => $emit('changeMidiIn', d)"></MIDIInButton>
-    <MIDIOutButton @changeMidiOut="(d: string) => $emit('changeMidiOut', d)"></MIDIOutButton>
+    <MIDIInButton
+      :firstInteraction="firstInteraction"
+      @changeMidiIn="(d: string) => $emit('changeMidiIn', d)"
+    ></MIDIInButton>
+    <MIDIOutButton
+      :firstInteraction="firstInteraction"
+      @changeMidiOut="(d: string) => $emit('changeMidiOut', d)"
+    ></MIDIOutButton>
   </div>
 </template>
 

@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 
+const props = defineProps<{
+  firstInteraction: boolean
+}>()
+
 const localAudioProgram = localStorage.getItem('pianoAudioProgram')
 const pianoAudioProgram = ref<string>(localAudioProgram ? localAudioProgram : '0')
 
@@ -11,7 +15,7 @@ const handleSelectChange = (e: Event) => {
   target.blur()
 }
 
-watch(pianoAudioProgram, () => {
+watch([pianoAudioProgram, () => props.firstInteraction], () => {
   $emit('changePianoAudioProgram', pianoAudioProgram.value)
   localStorage.setItem('pianoAudioProgram', pianoAudioProgram.value)
 })

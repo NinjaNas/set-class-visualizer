@@ -12,6 +12,7 @@ const props = defineProps<{
   transposition: number
   hashData: { [key: string]: string }
   parsedProgram: null | { forte: string; transposition: string; timestamp: string }[]
+  firstInteraction: boolean
 }>()
 
 type ParsedProgram = {
@@ -33,7 +34,7 @@ const $emit = defineEmits([
   'changeGraphVel'
 ])
 
-let synth = JZZ.synth.Tiny()
+let synth: null | any = null
 
 const activeTab = ref<string>('piano')
 const selectedMidiIn = ref<string>('')
@@ -50,11 +51,11 @@ const duration = ref<number>(0)
 const player = ref<null | any>(null)
 
 const changeMidiIn = (s: string) => {
-  selectedMidiIn.value = s
+  selectedMidiIn.value = s ? s : ''
 }
 
 const changeMidiOut = (s: string) => {
-  selectedMidiOut.value = s
+  selectedMidiOut.value = s ? s : ''
 }
 
 const changeIsPlaying = (s: string) => {
@@ -133,36 +134,30 @@ const resizeHandler = (event: MouseEvent) => {
   document.addEventListener('mouseup', stopResizing)
 }
 
-watch(
-  () => isPlaying.value,
-  () => {
-    switch (isPlaying.value) {
-      case 'false':
-        player.value.stop()
-        changeStopPosition()
-        break
-      case 'pause':
-        player.value.pause()
-        changeStopPosition()
-        break
-      case 'resume':
-        player.value.resume()
-        changePosition()
-        break
-      case 'true':
-        player.value.resume()
-        changePosition()
-        break
-    }
+watch(isPlaying, () => {
+  switch (isPlaying.value) {
+    case 'false':
+      player.value.stop()
+      changeStopPosition()
+      break
+    case 'pause':
+      player.value.pause()
+      changeStopPosition()
+      break
+    case 'resume':
+      player.value.resume()
+      changePosition()
+      break
+    case 'true':
+      player.value.resume()
+      changePosition()
+      break
   }
-)
+})
 
-watch(
-  () => isLooping.value,
-  () => {
-    player.value.loop(isLooping.value)
-  }
-)
+watch(isLooping, () => {
+  player.value.loop(isLooping.value)
+})
 
 const getCurrParsedObj = () => {
   if (!props.parsedProgram) return
@@ -242,6 +237,13 @@ watch(
   }
 )
 
+watch(
+  () => props.firstInteraction,
+  () => {
+    synth = JZZ.synth.Tiny()
+  }
+)
+
 onMounted(() => {
   watch(
     () => props.isHorizontalPanelOpen,
@@ -294,6 +296,7 @@ onMounted(() => {
           :isMidiLoaded="isMidiLoaded"
           :activeTab="activeTab"
           :parsedProgram="parsedProgram"
+          :firstInteraction="firstInteraction"
           @changeIsPlaying="changeIsPlaying"
           @changeIsLooping="changeIsLooping"
           @jumpPosition="jumpPosition"
@@ -311,6 +314,7 @@ onMounted(() => {
           :activeTab="activeTab"
           :player="player"
           :hashData="hashData"
+          :firstInteraction="firstInteraction"
           @changeIsPlaying="changeIsPlaying"
           @changeMidiLoaded="changeMidiLoaded"
           @changePosition="changePosition"
@@ -322,7 +326,8 @@ onMounted(() => {
           @changeParsedProgram="(d: ParsedProgram[]) => $emit('changeParsedProgram', d)"
         ></ProgramInput>
         <OptionsTab
-          v-if="activeTab === 'options'"
+          v-show="activeTab === 'options'"
+          :firstInteraction="firstInteraction"
           @changeGraphText="(d: string) => $emit('changeGraphText', d)"
           @changeVerticalPanelToggle="(d: boolean) => $emit('changeVerticalPanelToggle', d)"
           @useLocalOrFetchAndCreateDag="(d: string) => $emit('useLocalOrFetchAndCreateDag', d)"

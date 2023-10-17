@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 const verticalPanel = ref<boolean>(
   localStorage.getItem('sidebar') === 'on'
     ? true
@@ -11,6 +11,12 @@ const verticalPanel = ref<boolean>(
 const $emit = defineEmits(['changeVerticalPanelToggle'])
 
 watch(verticalPanel, () => {
+  const mode = verticalPanel.value ? 'on' : 'off'
+  $emit('changeVerticalPanelToggle', verticalPanel.value)
+  localStorage.setItem('sidebar', mode)
+})
+
+onMounted(() => {
   const mode = verticalPanel.value ? 'on' : 'off'
   $emit('changeVerticalPanelToggle', verticalPanel.value)
   localStorage.setItem('sidebar', mode)

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 
 const localAudioType = localStorage.getItem('graphAudioType')
 const graphAudioType = ref<string>(localAudioType ? localAudioType : 'chord')
@@ -7,6 +7,11 @@ const graphAudioType = ref<string>(localAudioType ? localAudioType : 'chord')
 const $emit = defineEmits(['changeGraphAudioType'])
 
 watch(graphAudioType, () => {
+  $emit('changeGraphAudioType', graphAudioType.value)
+  localStorage.setItem('graphAudioType', graphAudioType.value)
+})
+
+onMounted(() => {
   $emit('changeGraphAudioType', graphAudioType.value)
   localStorage.setItem('graphAudioType', graphAudioType.value)
 })

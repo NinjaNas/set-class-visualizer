@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, watch, ref, onUnmounted } from 'vue'
+import { watch, ref, onUnmounted } from 'vue'
 import { JZZ } from 'jzz'
 import { Tiny } from 'jzz-synth-tiny'
 import { Kbd } from 'jzz-input-kbd'
@@ -23,21 +23,18 @@ const props = defineProps<{
   position: number
   duration: number
   activeTab: string
+  firstInteraction: boolean
   parsedProgram: null | { forte: string; transposition: string; timestamp: string }[]
 }>()
 
-const synth = JZZ.synth.Tiny()
+let synth: null | any = null
 
 const piano = ref<null | any>(null)
 const ascii = ref<null | any>(null)
 const portIn = ref<null | any>(null)
 const portOut = ref<null | any>(null)
-const localProgram = localStorage.getItem('pianoAudioProgram')
-const localProgramNum = localProgram ? parseInt(localProgram) : 0 // even if localProgram == 0 returns false, it will still return 0
-const program = ref<number>(localProgramNum)
-const localVel = localStorage.getItem('pianoVelocity')
-const localVelNum = localVel ? parseInt(localVel) : localVel === '0' ? 0 : 60
-const vel = ref<number>(localVelNum)
+const program = ref<number>(0)
+const vel = ref<number>(127)
 const notes = ref<null | string[]>(null)
 const complement = ref<null | string[]>(null)
 const filter = ref<any>(
@@ -50,9 +47,7 @@ const filter = ref<any>(
 )
 const pianoRef = ref<null | HTMLDivElement>(null)
 const currOctave = ref<number>(5)
-const localMidiChannel = localStorage.getItem('midiChannel')
-const localMidiChannelNum = localMidiChannel ? parseInt(localMidiChannel) : 0 // even if localMidiChannel == 0 returns false, it will still return 0
-const midiChannel = ref<number>(localMidiChannelNum)
+const midiChannel = ref<number>(0)
 
 const octaveSwitchLabels = [
   '-1 (1)',
@@ -74,10 +69,8 @@ const extendedKeys = ['Y', 'H', 'U', 'J']
 const initPiano = () => {
   setPiano(midiChannel.value)
   setAscii(midiChannel.value)
-  const localMidiIn = localStorage.getItem('midiIn')
-  const localMidiOut = localStorage.getItem('midiOut')
-  setPortIn(localMidiIn ? localMidiIn : props.selectedMidiIn)
-  setPortOut(localMidiOut ? localMidiOut : props.selectedMidiOut)
+  setPortIn(props.selectedMidiIn)
+  setPortOut(props.selectedMidiOut)
   connectPiano()
 }
 
@@ -118,7 +111,7 @@ const setPiano = (chan: number = 0) => {
 }
 
 const setPortIn = (s: string = '') => {
-  if (s.length) {
+  if (s) {
     portIn.value = JZZ().openMidiIn(s)
   } else {
     portIn.value = JZZ().openMidiIn()
@@ -126,7 +119,7 @@ const setPortIn = (s: string = '') => {
 }
 
 const setPortOut = (s: string = '') => {
-  if (s.length) {
+  if (s) {
     portOut.value = JZZ().openMidiOut(s)
   } else {
     portOut.value = JZZ().openMidiOut()
@@ -345,58 +338,59 @@ const changePianoVel = (s: string) => {
   vel.value = parseInt(s)
 }
 
-onMounted(() => {
-  initPiano()
-  window.addEventListener('keydown', keydownHandler)
+watch(
+  () => props.firstInteraction,
+  () => {
+    synth = JZZ.synth.Tiny()
+    initPiano()
+    window.addEventListener('keydown', keydownHandler)
 
-  // set red notes and disable keys on update of props
-  watch(
-    () => [props.selectedSets, props.transposition, currOctave.value],
-    () => {
+    // set red notes and disable keys on update of props
+    watch([() => props.selectedSets, () => props.transposition, currOctave], () => {
       setNotes()
       limitNotes()
-    }
-  )
+    })
 
-  // disable all keys when in a text field
-  watch(
-    () => props.textFieldFocused,
-    () => (props.textFieldFocused ? disableKeypress() : enableKeypress())
-  )
+    // disable all keys when in a text field
+    watch(
+      () => props.textFieldFocused,
+      () => (props.textFieldFocused ? disableKeypress() : enableKeypress())
+    )
 
-  watch(
-    () => props.selectedMidiIn,
-    () => {
-      disconnectPiano()
-      portIn.value.close()
-      setPortIn(props.selectedMidiIn)
-      connectPiano()
-    }
-  )
-
-  watch(
-    () => props.selectedMidiOut,
-    () => {
-      disconnectPiano()
-      portOut.value.close()
-      setPortOut(props.selectedMidiOut)
-      connectPiano()
-    }
-  )
-
-  watch(
-    () => props.activeTab,
-    () => {
-      if (props.activeTab === 'piano') {
-        enableKeypress()
-        window.addEventListener('keydown', keydownHandler)
-      } else {
-        disableKeypress()
-        window.removeEventListener('keydown', keydownHandler)
+    watch(
+      () => props.selectedMidiIn,
+      () => {
+        disconnectPiano()
+        portIn.value.close()
+        setPortIn(props.selectedMidiIn)
+        connectPiano()
       }
-    }
-  )
-})
+    )
+
+    watch(
+      () => props.selectedMidiOut,
+      () => {
+        disconnectPiano()
+        portOut.value.close()
+        setPortOut(props.selectedMidiOut)
+        connectPiano()
+      }
+    )
+
+    watch(
+      () => props.activeTab,
+      () => {
+        if (props.activeTab === 'piano') {
+          enableKeypress()
+          window.addEventListener('keydown', keydownHandler)
+        } else {
+          disableKeypress()
+          window.removeEventListener('keydown', keydownHandler)
+        }
+      }
+    )
+  }
+)
 
 onUnmounted(() => {
   disconnectPiano()
@@ -433,8 +427,12 @@ onUnmounted(() => {
         @jumpPosition="(n: number) => $emit('jumpPosition', n)"
         @changePositionText="(n: number) => $emit('changePositionText', n)"
       ></PlayPanel>
-      <SwitchMidiButton @changeMidiChannel="changeMidiChannel"></SwitchMidiButton>
+      <SwitchMidiButton
+        :firstInteraction="firstInteraction"
+        @changeMidiChannel="changeMidiChannel"
+      ></SwitchMidiButton>
       <PianoProgramButton
+        :firstInteraction="firstInteraction"
         v-if="midiChannel === 0"
         @changePianoAudioProgram="changePianoAudioProgram"
       ></PianoProgramButton>

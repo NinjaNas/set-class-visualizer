@@ -1,12 +1,17 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 
 const localGraphVel = localStorage.getItem('graphVelocity')
-const graphVel = ref<string>(localGraphVel ? localGraphVel : '127')
+const graphVel = ref<string>(localGraphVel ? localGraphVel : '60')
 
 const $emit = defineEmits(['changeGraphVel'])
 
 watch(graphVel, () => {
+  $emit('changeGraphVel', graphVel.value)
+  localStorage.setItem('graphVelocity', graphVel.value)
+})
+
+onMounted(() => {
   $emit('changeGraphVel', graphVel.value)
   localStorage.setItem('graphVelocity', graphVel.value)
 })

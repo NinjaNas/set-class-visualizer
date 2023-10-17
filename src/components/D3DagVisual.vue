@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import {
   formatSetToString,
   toFormattedPrimeFormArray,
@@ -15,7 +15,8 @@ import { graphJson } from 'd3-dag'
 import { JZZ } from 'jzz'
 import { Tiny } from 'jzz-synth-tiny'
 Tiny(JZZ)
-const synth = JZZ.synth.Tiny()
+
+let synth: null | any = null
 
 import type { MutGraphNode, MutGraphLink } from 'd3-dag'
 type Link = { source: string; target: string }
@@ -52,12 +53,8 @@ const nodeData = ref<null | GNode[]>(null)
 const svgRef = ref<null | SVGElement>(null)
 const graphSize = ref<{ width: number; height: number }>({ width: 0, height: 0 })
 const zoomRef = ref<number>(0.1)
-const localProgram = localStorage.getItem('graphAudioProgram')
-const localProgramNum = localProgram ? parseInt(localProgram) : 0 // even if localProgram == 0 returns false, it will still return 0
-const program = ref<number>(localProgramNum)
-const localGraphVel = localStorage.getItem('graphVel')
-const localGraphVelNum = localGraphVel ? parseInt(localGraphVel) : localGraphVel === '0' ? 0 : 60 // even if localProgram == 0 returns false, it will still return 0
-const graphVel = ref<number>(localGraphVelNum)
+const program = ref<number>(0)
+const graphVel = ref<number>(60)
 const transposition = ref<number>(0)
 const graphAudioOctave = ref<number>(4)
 const isVerticalPanelOpen = ref<boolean>(false)
@@ -68,6 +65,7 @@ const textFieldFocused = ref<boolean>(false)
 const parsedProgram = ref<null | { forte: string; transposition: string; timestamp: string }[]>(
   null
 )
+const firstInteraction = ref<boolean>(false)
 
 const prevSelectedSets = ref<string[]>([])
 const selectedSets = ref<string[]>(['["0","1","2","3","4","5","6","7","8","9","T","E"]|12-1'])
@@ -228,6 +226,10 @@ const createDag = async () => {
     .append('g')
     .attr('transform', ({ x, y }) => `translate(${x}, ${y})`)
     .on('click', (event, d) => {
+      if (!synth) {
+        synth = JZZ.synth.Tiny()
+      }
+
       prevSelectedSets.value = selectedSets.value
 
       selectedSets.value = getSelectedSets(d)
@@ -511,6 +513,12 @@ const changeSelectedSet = (s: string, t: number) => {
   initHighlight() // set highlight after selectedSet changed, can be an empty func if createDag is not run yet
 }
 
+const handleFirstInteraction = () => {
+  if (!firstInteraction.value) {
+    firstInteraction.value = true
+  }
+}
+
 const updateDimensionsHandler = () => {
   d3.select(svgRef.value).attr('width', window.innerWidth).attr('height', window.innerHeight)
 }
@@ -553,6 +561,12 @@ const useLocalOrFetchAndCreateDag = async (dagStr: string) => {
   }
 }
 
+watch(firstInteraction, () => {
+  document.removeEventListener('click', handleFirstInteraction)
+
+  synth = JZZ.synth.Tiny()
+})
+
 onMounted(async () => {
   const currDag = localStorage.getItem('dag')
   if (currDag) {
@@ -567,6 +581,7 @@ onMounted(async () => {
     fetchData()
   }
 
+  document.addEventListener('click', handleFirstInteraction)
   window.addEventListener('resize', updateDimensionsHandler)
 })
 
@@ -576,6 +591,7 @@ onUnmounted(() => {
     clearInterval(id)
   }
   window.removeEventListener('resize', updateDimensionsHandler)
+  document.removeEventListener('click', handleFirstInteraction)
 })
 </script>
 
@@ -609,6 +625,7 @@ onUnmounted(() => {
     :transposition="transposition"
     :hashData="hashData"
     :parsedProgram="parsedProgram"
+    :firstInteraction="firstInteraction"
   ></HorizontalPanel>
   <VerticalPanel
     :class="{ active: focusPanel === 'vertical' }"

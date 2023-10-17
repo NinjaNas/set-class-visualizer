@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 
 const localText = localStorage.getItem('graphText')
 const graphText = ref<string>(localText ? localText : 'prime')
@@ -7,6 +7,11 @@ const graphText = ref<string>(localText ? localText : 'prime')
 const $emit = defineEmits(['changeGraphText'])
 
 watch(graphText, () => {
+  $emit('changeGraphText', graphText.value)
+  localStorage.setItem('graphText', graphText.value)
+})
+
+onMounted(() => {
   $emit('changeGraphText', graphText.value)
   localStorage.setItem('graphText', graphText.value)
 })
