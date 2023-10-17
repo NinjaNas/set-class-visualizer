@@ -181,7 +181,7 @@ const getCurrParsedObj = () => {
 const findCurrIndex = () => {
   if (!props.parsedProgram) return
 
-  // partial binary search
+  // binary search
   let low = 0
   let high = props.parsedProgram.length - 1
 
@@ -191,15 +191,23 @@ const findCurrIndex = () => {
     if (parseInt(props.parsedProgram[mid].timestamp) > position.value) {
       high = mid - 1
     } else if (parseInt(props.parsedProgram[mid].timestamp) < position.value) {
-      low = mid
-      // decrement to find the first timestamp less than the current position
-      for (let i = high; i >= low; i--) {
-        if (parseInt(props.parsedProgram[i].timestamp) <= position.value) {
-          currIndexProgram.value = i
+      // find the first timestamp less than the current position
+      if (mid + 1 < props.parsedProgram.length) {
+        if (parseInt(props.parsedProgram[mid + 1].timestamp) > position.value) {
+          currIndexProgram.value = mid
+          return
+        } else if (parseInt(props.parsedProgram[mid + 1].timestamp) < position.value) {
+          low = mid + 1
+          continue
+        } else {
+          currIndexProgram.value = mid + 1
           return
         }
+      } else {
+        // at end of the program
+        currIndexProgram.value = mid
+        return
       }
-      return
     } else {
       currIndexProgram.value = mid
       return
