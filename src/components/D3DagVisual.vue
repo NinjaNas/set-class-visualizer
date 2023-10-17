@@ -59,6 +59,7 @@ const graphVel = ref<number>(60)
 const transposition = ref<number>(0)
 const graphAudioOctave = ref<number>(4)
 const isVerticalPanelOpen = ref<boolean>(false)
+const isHighlightProgram = ref<boolean>(true)
 const verticalPanelToggle = ref<boolean>(true)
 const isHorizontalPanelOpen = ref<boolean>(false)
 const focusPanel = ref<string>('horizontal')
@@ -69,6 +70,7 @@ const parsedProgram = ref<null | { forte: string; transposition: string; timesta
 const firstInteraction = ref<boolean>(false)
 
 const prevSelectedSets = ref<string[]>([])
+const prevClickedSelectedSets = ref<string[]>([])
 const selectedSets = ref<string[]>(['["0","1","2","3","4","5","6","7","8","9","T","E"]|12-1'])
 
 const currNoteQueue = ref<string[]>([])
@@ -127,14 +129,14 @@ let initHighlight = () => {}
 const createDag = async () => {
   if (!svgRef.value || !jsonData.value) return
 
-  const removePrevHighlight = () => {
-    if (!prevSelectedSets.value.length) return
+  const removePrevHighlight = (currOnHoverSets: string[]) => {
+    if (!currOnHoverSets.length) return
 
     const nodesFilter = (n: GNode) =>
-      prevSelectedSets.value.includes(n.data) && !selectedSets.value.includes(n.data)
+      currOnHoverSets.includes(n.data) && !selectedSets.value.includes(n.data)
 
     const linksFilter = (l: GLink) =>
-      l.source.data === prevSelectedSets.value[0] && l.source.data !== selectedSets.value[0]
+      l.source.data === currOnHoverSets[0] && l.source.data !== selectedSets.value[0]
 
     nodes
       .filter((n) => nodesFilter(n))
@@ -235,12 +237,14 @@ const createDag = async () => {
 
       selectedSets.value = getSelectedSets(d)
 
+      prevClickedSelectedSets.value = selectedSets.value
+
       isVerticalPanelOpen.value = true && verticalPanelToggle.value
       if (!(graphAudioType.value === 'off')) {
         playAudio()
       }
 
-      removePrevHighlight()
+      removePrevHighlight(prevSelectedSets.value)
     })
     .on('mouseover', (event, d) => {
       addCurrHighlight(getSelectedSets(d))
@@ -287,7 +291,8 @@ const createDag = async () => {
 
   // init highlight or reset highlight after graph type change
   initHighlight = () => {
-    removePrevHighlight() // required for switching nodes using parsedProgram
+    removePrevHighlight(prevClickedSelectedSets.value)
+    removePrevHighlight(prevSelectedSets.value) // required for switching nodes using parsedProgram
     for (const d of dag.nodes()) {
       if (d.data === selectedSets.value[0]) {
         selectedSets.value = getSelectedSets(d)
@@ -499,6 +504,10 @@ const changeVerticalPanelToggle = (b: boolean) => {
   }
 }
 
+const changeHighlightProgram = (b: boolean) => {
+  isHighlightProgram.value = b
+}
+
 const changeGraphVel = (s: string) => {
   graphVel.value = parseInt(s)
 }
@@ -507,11 +516,14 @@ const changeParsedProgram = (d: { forte: string; transposition: string; timestam
   parsedProgram.value = d
 }
 
+// process program
 const changeSelectedSet = (s: string, t: number) => {
   prevSelectedSets.value = selectedSets.value
   selectedSets.value = [s]
   transposition.value = t
-  initHighlight() // set highlight after selectedSet changed, can be an empty func if createDag is not run yet
+  if (isHighlightProgram.value) {
+    initHighlight() // set highlight after selectedSet changed, can be an empty func if createDag is not run yet
+  }
 }
 
 const handleFirstInteraction = () => {
@@ -620,6 +632,7 @@ onUnmounted(() => {
     @closeModal="isHorizontalPanelOpen = false"
     @changeParsedProgram="changeParsedProgram"
     @changeSelectedSet="changeSelectedSet"
+    @changeHighlightProgram="changeHighlightProgram"
     :isHorizontalPanelOpen="isHorizontalPanelOpen"
     :selectedSets="selectedSets"
     :textFieldFocused="textFieldFocused"
