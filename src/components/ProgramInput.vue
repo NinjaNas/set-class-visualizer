@@ -409,9 +409,10 @@ watch([programSelect, () => props.firstInteraction], () => {
           <option value="custom">Custom</option>
         </select>
       </div>
-      <div :style="{ visibility: isCustom ? 'visible' : 'hidden' }">
+      <div :disabled="!isCustom">
         <label for="load-midi">Load Midi:</label>
         <input
+          :disabled="!isCustom"
           ref="midiFileInput"
           id="load-midi"
           style="max-width: 230px"
@@ -420,22 +421,15 @@ watch([programSelect, () => props.firstInteraction], () => {
           accept=".mid"
         />
       </div>
-      <label :style="{ visibility: isCustom ? 'visible' : 'hidden' }" for="programInput"
-        >Program Input:</label
-      >
-      <div
-        :style="{ visibility: isCustom ? 'visible' : 'hidden' }"
-        id="programInput"
-        class="program-buttons"
-      >
-        <button @click="addCurrentSelection" :disabled="!isMidiLoaded">Add Set @ Time</button>
-        <button @click="handleProgramInput" :disabled="!isMidiLoaded">Parse Program</button>
+      <label for="programInput">Program Input:</label>
+      <div id="programInput" class="program-buttons">
+        <button :disabled="!isMidiLoaded" @click="addCurrentSelection">Add Set @ Time</button>
+        <button :disabled="!isMidiLoaded" @click="handleProgramInput">Parse Program</button>
       </div>
     </div>
     <div class="import-program-panel">
       <h2 style="font-weight: bold; text-decoration: underline; padding: 0">Import Program</h2>
       <textarea
-        :disabled="!isMidiLoaded"
         ref="textAreaRef"
         class="piano-inner-grid-container input-text"
         type="text"
