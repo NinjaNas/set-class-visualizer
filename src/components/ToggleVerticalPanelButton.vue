@@ -1,12 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
-const verticalPanel = ref<boolean>(
-  localStorage.getItem('sidebar') === 'on'
-    ? true
-    : localStorage.getItem('sidebar') === 'off'
-    ? false
-    : true
-) // if null set default to true
+const verticalPanel = ref<boolean>(localStorage.getItem('sidebar') === 'off' ? false : true)
 
 const $emit = defineEmits(['changeVerticalPanelToggle'])
 
