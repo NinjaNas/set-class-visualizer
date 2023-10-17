@@ -4,7 +4,7 @@
   <footer class="footer-container">
     <p style="font-size: 0.7em">Made with ❤️ by Khang Tran</p>
     <a href="https://github.com/NinjaNas/set-class-visualizer">
-      <img class="img-github" src="src/assets/github-mark.svg" alt="github" />
+      <img class="img-github" src="../assets/github-mark.svg" alt="github" />
     </a>
   </footer>
 </template>
