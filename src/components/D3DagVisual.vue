@@ -9,6 +9,7 @@ import {
 import VerticalPanel from './VerticalPanel.vue'
 import HorizontalPanel from './HorizontalPanel.vue'
 import HorizontalPanelOpenButton from './HorizontalPanelOpenButton.vue'
+import DagFooter from './DagFooter.vue'
 import GraphPanel from './GraphPanel.vue'
 import * as d3 from 'd3'
 import { graphJson } from 'd3-dag'
@@ -640,6 +641,7 @@ onUnmounted(() => {
     v-show="!isHorizontalPanelOpen"
     @openModal="isHorizontalPanelOpen = true"
   ></HorizontalPanelOpenButton>
+  <DagFooter></DagFooter>
 </template>
 
 <style>
