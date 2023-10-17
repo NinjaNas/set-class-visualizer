@@ -435,7 +435,7 @@ watch([programSelect, () => props.firstInteraction], () => {
     <div class="import-program-panel">
       <h2 style="font-weight: bold; text-decoration: underline; padding: 0">Import Program</h2>
       <textarea
-        :disabled="!isCustom || !isMidiLoaded"
+        :disabled="!isMidiLoaded"
         ref="textAreaRef"
         class="piano-inner-grid-container input-text"
         type="text"
