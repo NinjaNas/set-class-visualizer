@@ -5,8 +5,10 @@ import GraphAudioTypeButton from './GraphAudioTypeButton.vue'
 import LightDarkModeButton from './LightDarkModeButton.vue'
 import MIDIInButton from './MIDIInButton.vue'
 import MIDIOutButton from './MIDIOutButton.vue'
+import PositionDebounceSlider from './PositionDebounceSlider.vue'
 import PrimeForteButtonVue from './PrimeForteButton.vue'
 import SwitchDagButton from './SwitchDagButton.vue'
+import ToggleHighlightProgram from './ToggleHighlightProgram.vue'
 import ToggleVerticalPanelButton from './ToggleVerticalPanelButton.vue'
 
 defineProps<{
@@ -38,6 +40,13 @@ defineProps<{
     <GraphAudioSlider
       @changeGraphVel="(d: string) => $emit('changeGraphVel', d)"
     ></GraphAudioSlider>
+    <h2 class="col-span-2-option-header">Program</h2>
+    <ToggleHighlightProgram
+      @changeHighlightProgram="(d: boolean) => $emit('changeHighlightProgram', d)"
+    ></ToggleHighlightProgram>
+    <PositionDebounceSlider
+      @changePositionDebounce="(d: string) => $emit('changePositionDebounce', d)"
+    ></PositionDebounceSlider>
     <h2 class="col-span-2-option-header">Midi</h2>
     <MIDIInButton
       :firstInteraction="firstInteraction"
