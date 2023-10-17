@@ -18,7 +18,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <label for="verticalPanelOptionButton">Toggle Sidebar</label>
+  <label for="verticalPanelOptionButton">Toggle Sidebar:</label>
   <label class="switch">
     <input
       id="verticalPanelOptionButton"

@@ -32,7 +32,7 @@ watch(darkMode, () => {
 </script>
 
 <template>
-  <label for="darkModeButton">Toggle Dark Mode</label>
+  <label for="darkModeButton">Toggle Dark Mode:</label>
   <label class="switch">
     <input id="darkModeButton" type="checkbox" @click="darkMode = !darkMode" :checked="darkMode" />
     <span class="slider"></span>
