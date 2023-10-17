@@ -17,6 +17,7 @@ const props = defineProps<{
   transposition: number
   activeTab: string
   hashData: { [key: string]: string }
+  firstInteraction: boolean
 }>()
 
 const $emit = defineEmits([
@@ -37,13 +38,18 @@ type ParsedProgram = {
   timestamp: string
 }
 
-const localTextInput = localStorage.getItem('textInput')
-const textInput = ref<string>(localTextInput ? localTextInput : '')
-const oldTextInput = ref<string>(localTextInput ? localTextInput : '')
+const textInput = ref<string>('')
+const oldTextInput = ref<string>('')
 const textAreaRef = ref<null | HTMLTextAreaElement>(null)
+const midiFileInput = ref<null | HTMLInputElement>(null)
 const errorMessages = ref<null | string[]>(null)
 const isValidProgram = ref<boolean>(false)
 const isModified = ref<boolean>(false)
+const localProgramSelect = localStorage.getItem('programSelect')
+const programSelect = ref<string>(
+  localProgramSelect ? localProgramSelect : 'src/assets/blue-bossa-modal'
+)
+const isCustom = ref<boolean>(false)
 
 const loadPlayer = (data: string) => {
   errorMessages.value = null
@@ -51,6 +57,52 @@ const loadPlayer = (data: string) => {
   const playerInit = JZZ.MIDI.SMF(data).player()
   $emit('changeMidiLoaded', true)
   $emit('changePlayer', playerInit)
+}
+
+const preloadMidi = async (url: string) => {
+  if (props.player) {
+    $emit('changeMidiLoaded', false)
+    $emit('changeIsPlaying', 'false')
+    props.player.close()
+  }
+  if (url === 'custom') {
+    isValidProgram.value = false
+    isCustom.value = true
+    if (midiFileInput.value) {
+      midiFileInput.value.value = ''
+    }
+    return
+  } else {
+    isCustom.value = false
+    textInput.value = 'Loading...'
+    oldTextInput.value = 'Loading...'
+  }
+  try {
+    const resMidi = await fetch(url + '.mid')
+    if (resMidi.ok) {
+      const buffer = await resMidi.arrayBuffer()
+      let data = ''
+      const bytes = new Uint8Array(buffer)
+      for (let i = 0; i < bytes.length; i++) {
+        data += String.fromCharCode(bytes[i])
+      }
+      loadPlayer(data)
+    } else {
+      console.log('Not 200', resMidi)
+    }
+
+    const resTxt = await fetch(url + '.txt')
+    if (resTxt.ok) {
+      const text = await resTxt.text()
+      textInput.value = text
+      oldTextInput.value = text
+      parse()
+    } else {
+      console.log('Not 200', resTxt)
+    }
+  } catch (error) {
+    console.log(error)
+  }
 }
 
 const loadMidi = (input: Event) => {
@@ -318,13 +370,33 @@ const handleProgramInput = () => {
   isModified.value = false
 }
 
+const onHashDataChange = () => {
+  if (Object.keys(props.hashData).length) {
+    preloadMidi(programSelect.value)
+  }
+}
+
 watch(textInput, (newTextInput) => {
   if (newTextInput === oldTextInput.value) {
     isModified.value = false
-  } else {
+  } else if (isCustom.value) {
     localStorage.setItem('textInput', newTextInput)
     isModified.value = true
   }
+})
+
+watch(isCustom, () => {
+  if (isCustom.value) {
+    const localTextInput = localStorage.getItem('textInput')
+    textInput.value = localTextInput ? localTextInput : ''
+    oldTextInput.value = localTextInput ? localTextInput : ''
+  }
+})
+
+watch(() => props.hashData, onHashDataChange, { immediate: true }) // when hashData is fetched run programSelect
+
+watch([programSelect, () => props.firstInteraction], () => {
+  onHashDataChange()
 })
 </script>
 
@@ -333,8 +405,16 @@ watch(textInput, (newTextInput) => {
     <div class="piano-inner-grid-container program-panel">
       <h2 style="font-weight: bold; text-decoration: underline; padding: 0">Program Panel</h2>
       <div>
+        <label for="programSelect">Program Select:</label>
+        <select id="programSelect" name="programSelect" v-model="programSelect">
+          <option value="src/assets/blue-bossa-modal">Blue Bossa (Modal)</option>
+          <option value="custom">Custom</option>
+        </select>
+      </div>
+      <div :style="{ visibility: isCustom ? 'visible' : 'hidden' }">
         <label for="load-midi">Load Midi:</label>
         <input
+          ref="midiFileInput"
           id="load-midi"
           style="max-width: 230px"
           @change="loadMidi"
@@ -342,8 +422,14 @@ watch(textInput, (newTextInput) => {
           accept=".mid"
         />
       </div>
-      <label for="programInput">Program Input:</label>
-      <div id="programInput" class="program-buttons">
+      <label :style="{ visibility: isCustom ? 'visible' : 'hidden' }" for="programInput"
+        >Program Input:</label
+      >
+      <div
+        :style="{ visibility: isCustom ? 'visible' : 'hidden' }"
+        id="programInput"
+        class="program-buttons"
+      >
         <button @click="addCurrentSelection" :disabled="!isMidiLoaded">Add Set @ Time</button>
         <button @click="handleProgramInput" :disabled="!isMidiLoaded">Parse Program</button>
       </div>
@@ -351,6 +437,7 @@ watch(textInput, (newTextInput) => {
     <div class="import-program-panel">
       <h2 style="font-weight: bold; text-decoration: underline; padding: 0">Import Program</h2>
       <textarea
+        :disabled="!isCustom || !isMidiLoaded"
         ref="textAreaRef"
         class="piano-inner-grid-container input-text"
         type="text"
