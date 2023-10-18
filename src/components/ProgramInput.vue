@@ -571,7 +571,7 @@ watch([programSelect, () => props.firstInteraction], () => {
 
 .audio-panel-program-tab {
   margin: 0 auto 0 auto;
-  min-width: 250px;
+  min-width: 271px;
   padding: 1em 1em 5em 1em;
   border-radius: 10px;
   border: 1px solid var(--color-accent);
