@@ -51,6 +51,7 @@ const programSelect = ref<string>(
   localProgramSelect ? localProgramSelect : 'data/blue-bossa-160bpm|data/blue-bossa-modal-160bpm'
 )
 const isCustom = ref<boolean>(false)
+const presetMidi = ref<string>('')
 
 const loadPlayer = (data: string) => {
   errorMessages.value = null
@@ -68,13 +69,16 @@ const preloadMidi = async (urlMid: string, urlTxt: string) => {
     props.player.close()
   }
   if (urlMid === 'custom' || urlTxt === 'custom') {
-    isValidProgram.value = false
-    isCustom.value = true
     if (midiFileInput.value) {
       midiFileInput.value.value = ''
     }
+    isValidProgram.value = false
+    isCustom.value = true
     return
   } else {
+    if (midiFileInput.value) {
+      midiFileInput.value.value = ''
+    }
     isCustom.value = false
     textInput.value = 'Loading...'
     oldTextInput.value = 'Loading...'
@@ -88,6 +92,9 @@ const preloadMidi = async (urlMid: string, urlTxt: string) => {
       for (let i = 0; i < bytes.length; i++) {
         data += String.fromCharCode(bytes[i])
       }
+
+      presetMidi.value = urlMid.split('/')[1]
+
       loadPlayer(data)
     } else {
       console.log('Not 200', resMidi)
@@ -416,51 +423,52 @@ watch([programSelect, () => props.firstInteraction], () => {
       <div>
         <label for="programSelect">Program Select:</label>
         <select id="programSelect" name="programSelect" v-model="programSelect">
-          <option value="custom">Custom</option>
+          <option disabled>ii-V-I in C</option>
           <option value="data/ii-V-I-in-C-80bpm|data/ii-V-I-in-C-chord-tones-80bpm">
-            ii-V-I in C 80 BPM (Chord Tones)
+            80 BPM (Chord Tones)
           </option>
           <option value="data/ii-V-I-in-C-80bpm|data/ii-V-I-in-C-chord-tones-9th-80bpm">
-            ii-V-I in C 80 BPM (Chord Tones + 9th)
+            80 BPM (Chord Tones + 9th)
           </option>
           <option value="data/ii-V-I-in-C-80bpm|data/ii-V-I-in-C-chord-tones-half-step-below-80bpm">
-            ii-V-I in C 80 BPM (Half Step Below Approach)
+            80 BPM (Half Step Below Approach)
           </option>
           <option value="data/ii-V-I-in-C-80bpm|data/ii-V-I-in-C-modal-80bpm">
-            ii-V-I in C 80 BPM (Modal)
+            80 BPM (Modal)
           </option>
           <option value="data/ii-V-I-in-C-160bpm|data/ii-V-I-in-C-chord-tones-160bpm">
-            ii-V-I in C 160 BPM (Chord Tones)
+            160 BPM (Chord Tones)
           </option>
           <option value="data/ii-V-I-in-C-160bpm|data/ii-V-I-in-C-chord-tones-9th-160bpm">
-            ii-V-I in C 160 BPM (Chord Tones + 9th)
+            160 BPM (Chord Tones + 9th)
           </option>
           <option
             value="data/ii-V-I-in-C-160bpm|data/ii-V-I-in-C-chord-tones-half-step-below-160bpm"
           >
-            ii-V-I in C 160 BPM (Half Step Below Approach)
+            160 BPM (Half Step Below Approach)
           </option>
           <option value="data/ii-V-I-in-C-160bpm|data/ii-V-I-in-C-modal-160bpm">
-            ii-V-I in C 160 BPM (Modal)
+            160 BPM (Modal)
           </option>
+          <option disabled>Blue Bossa</option>
           <option value="data/blue-bossa-80bpm|data/blue-bossa-chord-tones-80bpm">
-            Blue Bossa 80 BPM (Chord Tones)
+            80 BPM (Chord Tones)
           </option>
-          <option value="data/blue-bossa-80bpm|data/blue-bossa-modal-80bpm">
-            Blue Bossa 80 BPM (Modal)
-          </option>
+          <option value="data/blue-bossa-80bpm|data/blue-bossa-modal-80bpm">80 BPM (Modal)</option>
           <option value="data/blue-bossa-160bpm|data/blue-bossa-chord-tones-160bpm">
-            Blue Bossa 160 BPM (Chord Tones)
+            160 BPM (Chord Tones)
           </option>
           <option value="data/blue-bossa-160bpm|data/blue-bossa-modal-160bpm">
-            Blue Bossa 160 BPM (Modal)
+            160 BPM (Modal)
           </option>
+          <option disabled>Custom</option>
+          <option value="custom">Custom</option>
         </select>
       </div>
-      <div :disabled="!isCustom">
-        <label for="load-midi">Load Midi:</label>
+      <div>
+        <label v-if="isCustom" for="load-midi">Load Midi:</label>
         <input
-          :disabled="!isCustom"
+          v-if="isCustom"
           ref="midiFileInput"
           id="load-midi"
           style="max-width: 230px"
@@ -468,6 +476,8 @@ watch([programSelect, () => props.firstInteraction], () => {
           type="file"
           accept=".mid"
         />
+        <label v-if="!isCustom" for="load-midi">Current Midi File:</label>
+        <p v-if="!isCustom">{{ presetMidi }}</p>
       </div>
       <label for="programInput">Program Input:</label>
       <div id="programInput" class="program-buttons">
@@ -478,6 +488,7 @@ watch([programSelect, () => props.firstInteraction], () => {
     <div class="import-program-panel">
       <h2 style="font-weight: bold; text-decoration: underline; padding: 0">Import Program</h2>
       <textarea
+        :disabled="!isMidiLoaded"
         ref="textAreaRef"
         class="piano-inner-grid-container input-text"
         type="text"
@@ -486,6 +497,7 @@ watch([programSelect, () => props.firstInteraction], () => {
       ></textarea>
       <h2 style="font-weight: bold; text-decoration: underline; padding: 0">Output</h2>
       <div v-if="isModified" style="font-weight: bold">*Current Program Modified</div>
+      <div v-if="!isMidiLoaded">Load a MIDI File...</div>
       <div v-if="isValidProgram">Program parsed successfully!</div>
       <div v-for="error in errorMessages" :key="error">
         {{ error }}
@@ -544,7 +556,7 @@ watch([programSelect, () => props.firstInteraction], () => {
   border: 1px solid var(--color-accent);
   grid-column: span 2;
   grid-area: b;
-  min-height: 171px;
+  min-height: 224px;
 }
 
 .program-panel {
@@ -554,17 +566,17 @@ watch([programSelect, () => props.firstInteraction], () => {
   padding: 1em;
   border-radius: 10px;
   border: 1px solid var(--color-accent);
-  min-height: 171px;
+  min-height: 224px;
 }
 
 .audio-panel-program-tab {
   margin: 0 auto 0 auto;
   min-width: 250px;
-  padding: 1em;
+  padding: 1em 1em 5em 1em;
   border-radius: 10px;
   border: 1px solid var(--color-accent);
   grid-area: c;
-  min-height: 171px;
+  min-height: 224px;
 }
 
 @media only screen and (min-width: 720px) {
