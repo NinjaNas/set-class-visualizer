@@ -68,6 +68,10 @@ const changeIsLooping = (b: boolean) => {
   isLooping.value = b
 }
 
+const setIsLooping = (b: boolean) => {
+  player.value.loop(b)
+}
+
 const changeMidiLoaded = (b: boolean) => {
   isMidiLoaded.value = b
 }
@@ -339,6 +343,7 @@ onMounted(() => {
           @jumpPosition="jumpPosition"
           @changePositionText="changePositionText"
           @changeParsedProgram="(d: ParsedProgram[]) => $emit('changeParsedProgram', d)"
+          @setIsLooping="setIsLooping"
         ></ProgramInput>
         <OptionsTab
           v-show="activeTab === 'options'"

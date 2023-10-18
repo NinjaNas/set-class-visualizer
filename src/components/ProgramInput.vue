@@ -29,7 +29,8 @@ const $emit = defineEmits([
   'changeIsLooping',
   'jumpPosition',
   'changePositionText',
-  'changeParsedProgram'
+  'changeParsedProgram',
+  'setIsLooping'
 ])
 
 type ParsedProgram = {
@@ -46,7 +47,9 @@ const errorMessages = ref<null | string[]>(null)
 const isValidProgram = ref<boolean>(false)
 const isModified = ref<boolean>(false)
 const localProgramSelect = localStorage.getItem('programSelect')
-const programSelect = ref<string>(localProgramSelect ? localProgramSelect : 'data/blue-bossa-modal')
+const programSelect = ref<string>(
+  localProgramSelect ? localProgramSelect : 'data/blue-bossa-160bpm|data/blue-bossa-modal-160bpm'
+)
 const isCustom = ref<boolean>(false)
 
 const loadPlayer = (data: string) => {
@@ -55,15 +58,16 @@ const loadPlayer = (data: string) => {
   const playerInit = JZZ.MIDI.SMF(data).player()
   $emit('changeMidiLoaded', true)
   $emit('changePlayer', playerInit)
+  $emit('setIsLooping', props.isLooping) // reset looping value for new player
 }
 
-const preloadMidi = async (url: string) => {
+const preloadMidi = async (urlMid: string, urlTxt: string) => {
   if (props.player) {
     $emit('changeMidiLoaded', false)
     $emit('changeIsPlaying', 'false')
     props.player.close()
   }
-  if (url === 'custom') {
+  if (urlMid === 'custom' || urlTxt === 'custom') {
     isValidProgram.value = false
     isCustom.value = true
     if (midiFileInput.value) {
@@ -76,7 +80,7 @@ const preloadMidi = async (url: string) => {
     oldTextInput.value = 'Loading...'
   }
   try {
-    const resMidi = await fetch(url + '.mid')
+    const resMidi = await fetch(urlMid + '.mid')
     if (resMidi.ok) {
       const buffer = await resMidi.arrayBuffer()
       let data = ''
@@ -89,7 +93,7 @@ const preloadMidi = async (url: string) => {
       console.log('Not 200', resMidi)
     }
 
-    const resTxt = await fetch(url + '.txt')
+    const resTxt = await fetch(urlTxt + '.txt')
     if (resTxt.ok) {
       const text = await resTxt.text()
       textInput.value = text
@@ -104,6 +108,11 @@ const preloadMidi = async (url: string) => {
 }
 
 const loadMidi = (input: Event) => {
+  if (props.player) {
+    $emit('changeMidiLoaded', false)
+    $emit('changeIsPlaying', 'false')
+    props.player.close()
+  }
   const target = input.target as HTMLInputElement
   if (target.files) {
     const file = target.files[0]
@@ -370,7 +379,8 @@ const handleProgramInput = () => {
 
 const onHashDataChange = () => {
   if (Object.keys(props.hashData).length) {
-    preloadMidi(programSelect.value)
+    const splitUrl = programSelect.value.split('|')
+    preloadMidi(splitUrl[0], splitUrl[1])
   }
 }
 
@@ -395,6 +405,7 @@ watch(() => props.hashData, onHashDataChange, { immediate: true }) // when hashD
 
 watch([programSelect, () => props.firstInteraction], () => {
   onHashDataChange()
+  localStorage.setItem('programSelect', programSelect.value)
 })
 </script>
 
@@ -405,8 +416,45 @@ watch([programSelect, () => props.firstInteraction], () => {
       <div>
         <label for="programSelect">Program Select:</label>
         <select id="programSelect" name="programSelect" v-model="programSelect">
-          <option value="data/blue-bossa-modal">Blue Bossa (Modal)</option>
           <option value="custom">Custom</option>
+          <option value="data/ii-V-I-in-C-80bpm|data/ii-V-I-in-C-chord-tones-80bpm">
+            ii-V-I in C 80 BPM (Chord Tones)
+          </option>
+          <option value="data/ii-V-I-in-C-80bpm|data/ii-V-I-in-C-chord-tones-9th-80bpm">
+            ii-V-I in C 80 BPM (Chord Tones + 9th)
+          </option>
+          <option value="data/ii-V-I-in-C-80bpm|data/ii-V-I-in-C-chord-tones-half-step-below-80bpm">
+            ii-V-I in C 80 BPM (Half Step Below Approach)
+          </option>
+          <option value="data/ii-V-I-in-C-80bpm|data/ii-V-I-in-C-modal-80bpm">
+            ii-V-I in C 80 BPM (Modal)
+          </option>
+          <option value="data/ii-V-I-in-C-160bpm|data/ii-V-I-in-C-chord-tones-160bpm">
+            ii-V-I in C 160 BPM (Chord Tones)
+          </option>
+          <option value="data/ii-V-I-in-C-160bpm|data/ii-V-I-in-C-chord-tones-9th-160bpm">
+            ii-V-I in C 160 BPM (Chord Tones + 9th)
+          </option>
+          <option
+            value="data/ii-V-I-in-C-160bpm|data/ii-V-I-in-C-chord-tones-half-step-below-160bpm"
+          >
+            ii-V-I in C 160 BPM (Half Step Below Approach)
+          </option>
+          <option value="data/ii-V-I-in-C-160bpm|data/ii-V-I-in-C-modal-160bpm">
+            ii-V-I in C 160 BPM (Modal)
+          </option>
+          <option value="data/blue-bossa-80bpm|data/blue-bossa-chord-tones-80bpm">
+            Blue Bossa 80 BPM (Chord Tones)
+          </option>
+          <option value="data/blue-bossa-80bpm|data/blue-bossa-modal-80bpm">
+            Blue Bossa 80 BPM (Modal)
+          </option>
+          <option value="data/blue-bossa-160bpm|data/blue-bossa-chord-tones-160bpm">
+            Blue Bossa 160 BPM (Chord Tones)
+          </option>
+          <option value="data/blue-bossa-160bpm|data/blue-bossa-modal-160bpm">
+            Blue Bossa 160 BPM (Modal)
+          </option>
         </select>
       </div>
       <div :disabled="!isCustom">
@@ -502,7 +550,7 @@ watch([programSelect, () => props.firstInteraction], () => {
 .program-panel {
   grid-area: a;
   margin: 0 auto 0 auto;
-  width: 250px;
+  width: min-content;
   padding: 1em;
   border-radius: 10px;
   border: 1px solid var(--color-accent);
