@@ -654,7 +654,7 @@ onUnmounted(() => {
     v-show="!isHorizontalPanelOpen"
     @openModal="isHorizontalPanelOpen = true"
   ></HorizontalPanelOpenButton>
-  <DagFooter></DagFooter>
+  <DagFooter v-if="!isHorizontalPanelOpen"></DagFooter>
 </template>
 
 <style>
