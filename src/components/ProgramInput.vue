@@ -330,7 +330,7 @@ const parse = () => {
   }
 
   if (!firstDelimiterRead) {
-    const error = `[${location.lineNumber}:${location.charNumber}] Not a valid program, mising delimiters 'F', 'T', and '@'`
+    const error = `[${location.lineNumber}:${location.charNumber}] Not a valid program, missing delimiters 'F', 'T', and '@'`
     errorStack.push(error)
   } else if (currDelimiter === 1) {
     const error = `[${location.lineNumber}:${location.charNumber}] Incomplete program, missing delimiters 'T' and '@'`
