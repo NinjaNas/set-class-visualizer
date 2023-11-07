@@ -29,12 +29,22 @@ type DagJSONObject = {
   links: { source: string; target: string; points: number[][]; data: Link[] }
   v: number
 }
+type DataSetObj = {
+  number: string
+  primeForm: string
+  vec: string
+  z: null | string
+  complement: null | string
+  inversion: null | string
+}
+
 type DataSet = {
   number: string
   primeForm: string
   vec: string
   z: null | string
   complement: null | string
+  inversion: null | string
 }[]
 
 const NODE_RADIUS = 50
@@ -48,7 +58,11 @@ const abortController = new AbortController()
 const localData = localStorage.getItem('data')
 const apiData = ref<DataSet>(JSON.parse(localData ? localData : '[]'))
 const localHashData = localStorage.getItem('hashData')
+const localHashVecData = localStorage.getItem('hashData')
 const hashData = ref<{ [key: string]: string }>(JSON.parse(localHashData ? localHashData : '{}'))
+const hashVecData = ref<{ [key: string]: string }>(
+  JSON.parse(localHashVecData ? localHashVecData : '{}')
+)
 const jsonData = ref<null | DagJSONObject>(null)
 const nodeData = ref<null | GNode[]>(null)
 const svgRef = ref<null | SVGElement>(null)
@@ -60,6 +74,7 @@ const transposition = ref<number>(0)
 const graphAudioOctave = ref<number>(4)
 const isVerticalPanelOpen = ref<boolean>(false)
 const isHighlightProgram = ref<boolean>(true)
+const isTranspositionTextProgram = ref<boolean>(true)
 const verticalPanelToggle = ref<boolean>(true)
 const isHorizontalPanelOpen = ref<boolean>(false)
 const focusPanel = ref<string>('horizontal')
@@ -68,10 +83,13 @@ const parsedProgram = ref<null | { forte: string; transposition: string; timesta
   null
 )
 const firstInteraction = ref<boolean>(false)
+const loading = ref<boolean>(true)
 
 const prevSelectedSets = ref<string[]>([])
 const prevClickedSelectedSets = ref<string[]>([])
-const selectedSets = ref<string[]>(['["0","1","2","3","4","5","6","7","8","9","T","E"]|12-1'])
+const selectedSets = ref<string[]>([
+  '["0","1","2","3","4","5","6","7","8","9","T","E"]|12-1|CCCCC6'
+])
 
 const currNoteQueue = ref<string[]>([])
 const intervalIds = ref<number[]>([])
@@ -87,10 +105,14 @@ const fetchData = async () => {
       const dataRes: DataSet = await res.json()
       localStorage.setItem('data', JSON.stringify(dataRes))
       apiData.value = dataRes
+
       const obj: { [key: string]: string } = {}
       dataRes.forEach((e) => (obj[e.number] = e.primeForm))
-      localStorage.setItem('hashData', JSON.stringify(obj))
       hashData.value = obj
+
+      const objVec: { [key: string]: string } = {}
+      dataRes.forEach((e) => (objVec[e.number] = e.vec))
+      hashVecData.value = objVec
     } else {
       console.log('Not 200', res)
     }
@@ -110,7 +132,6 @@ const fetchDagData = async (url: string) => {
     )
     if (res.ok) {
       const dataRes: DagJSONObject = await res.json()
-      localStorage.setItem(url, JSON.stringify(dataRes))
       localStorage.setItem('dag', url)
       jsonData.value = dataRes
     } else {
@@ -293,8 +314,24 @@ const createDag = async () => {
   initHighlight = () => {
     removePrevHighlight(prevClickedSelectedSets.value)
     removePrevHighlight(prevSelectedSets.value) // required for switching nodes using parsedProgram
+    console.log(
+      localStorage.getItem('dag')?.includes('original'),
+      selectedSets.value[0].split('|')[1].endsWith('B'),
+      selectedSets.value[0].replace(/B/g, 'A')
+    )
     for (const d of dag.nodes()) {
-      if (d.data === selectedSets.value[0]) {
+      // overly complicated so highlights on original dags are also correct
+      if (
+        (localStorage.getItem('dag')?.includes('original') &&
+          selectedSets.value[0].split('|')[1].endsWith('B') &&
+          d.data ===
+            hashData.value[selectedSets.value[0].split('|')[1].replace(/B/g, 'A')] +
+              '|' +
+              selectedSets.value[0].split('|')[1].replace(/B/g, 'A') +
+              '|' +
+              selectedSets.value[0].split('|')[2]) ||
+        d.data === selectedSets.value[0]
+      ) {
         selectedSets.value = getSelectedSets(d)
         addCurrHighlight(getSelectedSets(d))
       }
@@ -384,15 +421,22 @@ const changePrimeFormAndUpdateOctaveText = () => {
 const changeToForte = () => {
   const nodes = getText()
   if (!nodes) return
-  nodes.text((d) => formatSetToString(d.data, true))
+  nodes.text((d) => formatSetToString(d.data, 'forte'))
 }
 
-// true for forte and false for primeForm
+const changeToVec = () => {
+  const nodes = getText()
+  if (!nodes) return
+  nodes.text((d) => formatSetToString(d.data, 'vec'))
+}
+
 const changeGraphText = (s: string) => {
   if (s === 'forte') {
     changeToForte()
   } else if (s === 'prime') {
     changePrimeFormAndUpdateOctaveText()
+  } else if (s === 'vec') {
+    changeToVec()
   }
 }
 
@@ -508,6 +552,10 @@ const changeHighlightProgram = (b: boolean) => {
   isHighlightProgram.value = b
 }
 
+const changeTranspositionTextProgram = (b: boolean) => {
+  isTranspositionTextProgram.value = b
+}
+
 const changeGraphVel = (s: string) => {
   graphVel.value = parseInt(s)
 }
@@ -520,7 +568,11 @@ const changeParsedProgram = (d: { forte: string; transposition: string; timestam
 const changeSelectedSet = (s: string, t: number) => {
   prevSelectedSets.value = selectedSets.value
   selectedSets.value = [s]
-  transposition.value = t
+  if (isTranspositionTextProgram.value) {
+    changeTransposition(t)
+  } else {
+    transposition.value = t
+  }
   if (isHighlightProgram.value) {
     initHighlight() // set highlight after selectedSet changed, can be an empty func if createDag is not run yet
   }
@@ -536,24 +588,14 @@ const updateDimensionsHandler = () => {
   d3.select(svgRef.value).attr('width', window.innerWidth).attr('height', window.innerHeight)
 }
 
-const useLocalOrFetchAndCreateDag = async (dagStr: string) => {
+const fetchAndCreateDag = async (dagStr: string) => {
   if (!svgRef.value) return
-  const dags: { [key: string]: null | string } = {
-    strictdagprimeforte: localStorage.getItem('strictdagprimeforte'),
-    cardinaldagprimeforte: localStorage.getItem('cardinaldagprimeforte')
-  }
 
   if (currNoteQueue.value.length) {
     clearCurrentQueue()
   }
 
-  const targetDag = dags[dagStr]
-
-  if (targetDag) {
-    jsonData.value = JSON.parse(targetDag)
-  } else {
-    await fetchDagData(dagStr)
-  }
+  await fetchDagData(dagStr)
 
   svgRef.value.innerHTML = '' // clear old dag if it exists
   createDag()
@@ -583,19 +625,27 @@ watch(firstInteraction, () => {
 onMounted(async () => {
   const currDag = localStorage.getItem('dag')
   if (currDag) {
-    await useLocalOrFetchAndCreateDag(currDag)
+    await fetchAndCreateDag(currDag)
   } else {
-    await useLocalOrFetchAndCreateDag('strictdagprimeforte')
+    await fetchAndCreateDag('vectororiginaldag')
   }
 
   const data = localStorage.getItem('data')
-  const hashData = localStorage.getItem('hashData')
-  if (!data || !hashData) {
+  if (!data) {
     fetchData()
-  }
+  } else {
+    const obj: { [key: string]: string } = {}
+    JSON.parse(data).forEach((e: DataSetObj) => (obj[e.number] = e.primeForm))
+    hashData.value = obj
 
+    const objVec: { [key: string]: string } = {}
+    JSON.parse(data).forEach((e: DataSetObj) => (objVec[e.number] = e.vec))
+    hashVecData.value = objVec
+  }
   document.addEventListener('click', handleFirstInteraction)
   window.addEventListener('resize', updateDimensionsHandler)
+
+  loading.value = false
 })
 
 onUnmounted(() => {
@@ -609,6 +659,7 @@ onUnmounted(() => {
 </script>
 
 <template>
+  <div v-if="loading" class="loading">Loading...</div>
   <GraphPanel
     :zoomRef="zoomRef"
     :transposition="transposition"
@@ -624,7 +675,7 @@ onUnmounted(() => {
     :class="{ active: focusPanel === 'horizontal' }"
     @focusHorizontal="focusPanel = 'horizontal'"
     @changeGraphText="changeGraphText"
-    @useLocalOrFetchAndCreateDag="useLocalOrFetchAndCreateDag"
+    @fetchAndCreateDag="fetchAndCreateDag"
     @changeGraphAudioType="changeGraphAudioType"
     @changeGraphAudioProgram="changeGraphAudioProgram"
     @changeVerticalPanelToggle="changeVerticalPanelToggle"
@@ -633,11 +684,13 @@ onUnmounted(() => {
     @changeParsedProgram="changeParsedProgram"
     @changeSelectedSet="changeSelectedSet"
     @changeHighlightProgram="changeHighlightProgram"
+    @changeTranspositionTextProgram="changeTranspositionTextProgram"
     :isHorizontalPanelOpen="isHorizontalPanelOpen"
     :selectedSets="selectedSets"
     :textFieldFocused="textFieldFocused"
     :transposition="transposition"
     :hashData="hashData"
+    :hashVecData="hashVecData"
     :parsedProgram="parsedProgram"
     :firstInteraction="firstInteraction"
   ></HorizontalPanel>
@@ -658,6 +711,14 @@ onUnmounted(() => {
 </template>
 
 <style>
+.loading {
+  font-size: large;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
 svg {
   shape-rendering: geometricPrecision;
 }

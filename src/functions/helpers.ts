@@ -1,5 +1,24 @@
-export const formatSetToString = (s: string, formatForte: boolean = false): string => {
-  return formatForte ? s.split('|')[1] : '{' + s.split('|')[0].slice(1, -1).replace(/"/g, '') + '}'
+export const formatSetToString = (
+  s: string,
+  format: string = 'prime',
+  removeInversion: boolean = true
+): string => {
+  switch (format) {
+    case 'prime':
+      return '{' + s.split('|')[0].slice(1, -1).replace(/"/g, '') + '}'
+    case 'forte':
+      if (
+        removeInversion &&
+        s.split('|')[1].endsWith('A') &&
+        localStorage.getItem('dag')?.includes('original')
+      ) {
+        return s.split('|')[1].slice(0, -1)
+      }
+      return s.split('|')[1]
+    case 'vec':
+      return s.split('|')[2]
+  }
+  return ''
 }
 
 export const toMidiNote = (s: string, octave: number): string => {

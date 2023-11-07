@@ -8,6 +8,7 @@ type DataSet = {
   vec: string
   z: null | string
   complement: null | string
+  inversion: null | string
 }[]
 
 const props = defineProps<{
@@ -29,12 +30,24 @@ const findSet = (s: string) => {
         case 'vec':
           return foundData.vec
         case 'z':
-          if (foundData.z && foundData.z.endsWith('A')) {
+          // if dag is original, do not return inversion distinction
+          if (
+            foundData.z &&
+            foundData.z.endsWith('A') &&
+            localStorage.getItem('dag')?.includes('original')
+          ) {
+            return foundData.z.slice(0, -1)
+          } else if (foundData.z && foundData.z.endsWith('A')) {
             return foundData.z + ', ' + foundData.z.slice(0, -1) + 'B'
           }
+
           return foundData.z
         case 'complement':
           return foundData.complement ? foundData.complement : 'Self'
+        case 'inversion':
+          return foundData.inversion
+            ? '{' + foundData.inversion.replace(/[[\]"]/g, '') + '}'
+            : 'Self'
         default:
           return foundData
       }
@@ -93,7 +106,7 @@ onMounted(() => {
       <div class="overflow-y-wrapper">
         <a @click="$emit('closeModal')" class="menuClose"></a>
         <div class="data">
-          <h1>Current Form:</h1>
+          <h1>Transposed Form:</h1>
           <p class="h1-font">
             {{
               '{' +
@@ -107,7 +120,7 @@ onMounted(() => {
           <p class="h1-font">{{ formatSetToString(selectedSets[0]) }}</p>
           <h1>Forte Number:</h1>
           <p class="h1-font">
-            {{ formatSetToString(selectedSets[0], true) }}
+            {{ formatSetToString(selectedSets[0], 'forte') }}
           </p>
           <h1 v-show="findSet('vec')">Interval Vector:</h1>
           <p class="h1-font" v-show="findSet('vec')">
@@ -120,6 +133,10 @@ onMounted(() => {
           <h1 v-show="findSet('complement')">Complement:</h1>
           <p class="h1-font" v-show="findSet('complement')">
             {{ findSet('complement') }}
+          </p>
+          <h1 v-show="findSet('inversion')">Inversion:</h1>
+          <p class="h1-font" v-show="findSet('inversion')">
+            {{ findSet('inversion') }}
           </p>
         </div>
       </div>

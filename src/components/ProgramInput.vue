@@ -143,7 +143,7 @@ const loadMidi = (input: Event) => {
 const addCurrentSelection = () => {
   textInput.value +=
     'F' +
-    formatSetToString(props.selectedSets[0], true) +
+    formatSetToString(props.selectedSets[0], 'forte', false) +
     'T' +
     props.transposition.toString() +
     '@' +
@@ -226,7 +226,16 @@ const parse = () => {
     }
 
     if (!(token in props.hashData)) {
-      const error = `[${location.lineNumber}:${location.charNumber}] Nonexistent forte token '${token}'`
+      let error = ''
+      if (token + 'A' in props.hashData) {
+        error = `[${location.lineNumber}:${
+          location.charNumber
+        }] Nonexistent forte token '${token}'. Did you mean '${token + 'A'}' or '${
+          token + 'B'
+        }'? Use inversion notation for program input!`
+      } else {
+        error = `[${location.lineNumber}:${location.charNumber}] Nonexistent forte token '${token}'`
+      }
       errorStack.push(error)
       return
     }

@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 const localDag = localStorage.getItem('dag')
-const dag = ref<string>(localDag ? localDag : 'strictdagprimeforte')
+const dag = ref<string>(localDag ? localDag : 'vectororiginaldag')
 
-const $emit = defineEmits(['useLocalOrFetchAndCreateDag'])
+const $emit = defineEmits(['fetchAndCreateDag'])
 
 watch(dag, () => {
-  $emit('useLocalOrFetchAndCreateDag', dag.value)
+  $emit('fetchAndCreateDag', dag.value)
   localStorage.setItem('dag', dag.value)
 })
 </script>
@@ -14,8 +14,12 @@ watch(dag, () => {
 <template>
   <label class="switch" for="switchDagButton">Graph Type: </label>
   <select id="switchDagButton" name="switchDagButton" v-model="dag">
-    <option value="strictdagprimeforte">Strictly-Increasing Graph</option>
-    <option value="cardinaldagprimeforte">Cardinality Growth Graph</option>
+    <option value="strictoriginaldag">Strictly-Increasing</option>
+    <option value="cardinaloriginaldag">Cardinality-Increasing</option>
+    <option value="vectororiginaldag">Vector-Similarity</option>
+    <option value="strictinversiondag">Strictly-Increasing w/ Inversions</option>
+    <option value="cardinalinversiondag">Cardinality-Increasing w/ Inversions</option>
+    <option value="vectorinversiondag">Vector-Similarity w/ Inversions</option>
   </select>
 </template>
 

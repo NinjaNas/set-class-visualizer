@@ -6,10 +6,12 @@ import LightDarkModeButton from './LightDarkModeButton.vue'
 import MIDIInButton from './MIDIInButton.vue'
 import MIDIOutButton from './MIDIOutButton.vue'
 import PositionDebounceSlider from './PositionDebounceSlider.vue'
-import PrimeForteButtonVue from './PrimeForteButton.vue'
+import GraphTextButtonVue from './GraphTextButton.vue'
 import SwitchDagButton from './SwitchDagButton.vue'
 import ToggleHighlightProgram from './ToggleHighlightProgram.vue'
 import ToggleVerticalPanelButton from './ToggleVerticalPanelButton.vue'
+import ToggleGraphTranspositionTextProgram from './ToggleGraphTranspositionTextProgram.vue'
+import { forteApiVersion, websiteVersion } from '../constants/constants'
 
 defineProps<{
   firstInteraction: boolean
@@ -24,12 +26,10 @@ defineProps<{
       @changeVerticalPanelToggle="(d: boolean) => $emit('changeVerticalPanelToggle', d)"
     ></ToggleVerticalPanelButton>
     <h2 class="col-span-2-option-header">Graph</h2>
-    <PrimeForteButtonVue
+    <GraphTextButtonVue
       @changeGraphText="(d: string) => $emit('changeGraphText', d)"
-    ></PrimeForteButtonVue>
-    <SwitchDagButton
-      @useLocalOrFetchAndCreateDag="(d: string) => $emit('useLocalOrFetchAndCreateDag', d)"
-    >
+    ></GraphTextButtonVue>
+    <SwitchDagButton @fetchAndCreateDag="(d: string) => $emit('fetchAndCreateDag', d)">
     </SwitchDagButton>
     <GraphAudioTypeButton
       @changeGraphAudioType="(d: string) => $emit('changeGraphAudioType', d)"
@@ -44,6 +44,10 @@ defineProps<{
     <ToggleHighlightProgram
       @changeHighlightProgram="(d: boolean) => $emit('changeHighlightProgram', d)"
     ></ToggleHighlightProgram>
+    <ToggleGraphTranspositionTextProgram
+      @changeTranspositionTextProgram="(d: boolean) => $emit('changeTranspositionTextProgram', d)"
+    >
+    </ToggleGraphTranspositionTextProgram>
     <PositionDebounceSlider
       @changePositionDebounce="(d: string) => $emit('changePositionDebounce', d)"
     ></PositionDebounceSlider>
@@ -56,6 +60,36 @@ defineProps<{
       :firstInteraction="firstInteraction"
       @changeMidiOut="(d: string) => $emit('changeMidiOut', d)"
     ></MIDIOutButton>
+    <h2 class="col-span-2-option-header">Github Info</h2>
+    <p>Website Github:</p>
+    <a
+      style="display: flex; align-items: center; text-decoration: none; color: var(--color-active)"
+      href="https://github.com/NinjaNas/set-class-visualizer"
+    >
+      <span>NinjaNas/set-class-visualizer</span>
+      <img
+        class="img-github"
+        src="../assets/github-mark.svg"
+        alt="github"
+        style="margin-left: 5px"
+      />
+    </a>
+    <p>ForteAPI Github:</p>
+    <a
+      style="display: flex; align-items: center; text-decoration: none; color: var(--color-active)"
+      href="https://github.com/NinjaNas/ForteAPI"
+    >
+      <span>NinjaNas/ForteAPI</span>
+      <img
+        class="img-github"
+        src="../assets/github-mark.svg"
+        alt="github"
+        style="margin-left: 5px"
+      />
+    </a>
+    <h2 class="col-span-2-option-header">Version Info</h2>
+    <p>Website Version: {{ websiteVersion }}</p>
+    <p>ForteAPI Version: {{ forteApiVersion }}</p>
   </div>
 </template>
 
