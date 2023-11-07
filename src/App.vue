@@ -10,9 +10,11 @@ onMounted(() => {
     localStorage.setItem('forteApi', forteApiVersion)
 
     localStorage.removeItem('dag')
-    localStorage.removeItem('data')
-    localStorage.removeItem('hashdata')
+    localStorage.setItem('dag', 'vectororiginaldag')
 
+    localStorage.removeItem('data')
+
+    localStorage.removeItem('hashData')
     localStorage.removeItem('strictdagprimeforte')
     localStorage.removeItem('cardinaldagprimeforte')
   }
