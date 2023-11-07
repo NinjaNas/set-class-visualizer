@@ -314,11 +314,6 @@ const createDag = async () => {
   initHighlight = () => {
     removePrevHighlight(prevClickedSelectedSets.value)
     removePrevHighlight(prevSelectedSets.value) // required for switching nodes using parsedProgram
-    console.log(
-      localStorage.getItem('dag')?.includes('original'),
-      selectedSets.value[0].split('|')[1].endsWith('B'),
-      selectedSets.value[0].replace(/B/g, 'A')
-    )
     for (const d of dag.nodes()) {
       // overly complicated so highlights on original dags are also correct
       if (
