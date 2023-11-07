@@ -22,6 +22,7 @@ onMounted(() => {
   <select id="graphTextButton" name="graphTextButton" v-model="graphText">
     <option value="prime">Prime Form</option>
     <option value="forte">Forte Number</option>
+    <option value="vec">Interval Vector</option>
   </select>
 </template>
 

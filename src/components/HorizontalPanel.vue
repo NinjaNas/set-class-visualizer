@@ -11,6 +11,7 @@ const props = defineProps<{
   textFieldFocused: boolean
   transposition: number
   hashData: { [key: string]: string }
+  hashVecData: { [key: string]: string }
   parsedProgram: null | { forte: string; transposition: string; timestamp: string }[]
   firstInteraction: boolean
 }>()
@@ -28,11 +29,12 @@ const $emit = defineEmits([
   'changeGraphText',
   'changeSelectedSet',
   'changeVerticalPanelToggle',
-  'useLocalOrFetchAndCreateDag',
+  'fetchAndCreateDag',
   'changeGraphAudioType',
   'changeGraphAudioProgram',
   'changeGraphVel',
-  'changeHighlightProgram'
+  'changeHighlightProgram',
+  'changeTranspositionTextProgram'
 ])
 
 let synth: null | any = null
@@ -172,7 +174,9 @@ const getCurrParsedObj = () => {
       .replace(/10/, 'T')
       .replace(/11/, 'E') +
     '|' +
-    props.parsedProgram[currIndexProgram.value].forte
+    props.parsedProgram[currIndexProgram.value].forte +
+    '|' +
+    props.hashVecData[props.parsedProgram[currIndexProgram.value].forte].replace(/[<,>]/g, '')
 
   $emit(
     'changeSelectedSet',
@@ -350,11 +354,14 @@ onMounted(() => {
           :firstInteraction="firstInteraction"
           @changeGraphText="(d: string) => $emit('changeGraphText', d)"
           @changeVerticalPanelToggle="(d: boolean) => $emit('changeVerticalPanelToggle', d)"
-          @useLocalOrFetchAndCreateDag="(d: string) => $emit('useLocalOrFetchAndCreateDag', d)"
+          @fetchAndCreateDag="(d: string) => $emit('fetchAndCreateDag', d)"
           @changeGraphAudioType="(d: string) => $emit('changeGraphAudioType', d)"
           @changeGraphAudioProgram="(d: string) => $emit('changeGraphAudioProgram', d)"
           @changeGraphVel="(d: string) => $emit('changeGraphVel', d)"
           @changeHighlightProgram="(d: boolean) => $emit('changeHighlightProgram', d)"
+          @changeTranspositionTextProgram="
+            (d: boolean) => $emit('changeTranspositionTextProgram', d)
+          "
           @changePositionDebounce="changePositionDebounce"
           @changeMidiIn="changeMidiIn"
           @changeMidiOut="changeMidiOut"
