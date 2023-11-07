@@ -105,6 +105,14 @@ const fetchData = async () => {
       const dataRes: DataSet = await res.json()
       localStorage.setItem('data', JSON.stringify(dataRes))
       apiData.value = dataRes
+
+      const obj: { [key: string]: string } = {}
+      dataRes.forEach((e) => (obj[e.number] = e.primeForm))
+      hashData.value = obj
+
+      const objVec: { [key: string]: string } = {}
+      dataRes.forEach((e) => (objVec[e.number] = e.vec))
+      hashVecData.value = objVec
     } else {
       console.log('Not 200', res)
     }
@@ -627,14 +635,11 @@ onMounted(async () => {
     fetchData()
   } else {
     const obj: { [key: string]: string } = {}
-
     JSON.parse(data).forEach((e: DataSetObj) => (obj[e.number] = e.primeForm))
-    localStorage.setItem('hashData', JSON.stringify(obj))
     hashData.value = obj
 
     const objVec: { [key: string]: string } = {}
     JSON.parse(data).forEach((e: DataSetObj) => (objVec[e.number] = e.vec))
-    localStorage.setItem('hashVecData', JSON.stringify(objVec))
     hashVecData.value = objVec
   }
   document.addEventListener('click', handleFirstInteraction)
