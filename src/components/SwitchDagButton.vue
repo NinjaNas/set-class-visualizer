@@ -1,11 +1,16 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 const localDag = localStorage.getItem('dag')
 const dag = ref<string>(localDag ? localDag : 'vectororiginaldag')
 
 const $emit = defineEmits(['fetchAndCreateDag'])
 
 watch(dag, () => {
+  $emit('fetchAndCreateDag', dag.value)
+  localStorage.setItem('dag', dag.value)
+})
+
+onMounted(() => {
   $emit('fetchAndCreateDag', dag.value)
   localStorage.setItem('dag', dag.value)
 })
