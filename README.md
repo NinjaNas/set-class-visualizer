@@ -1,46 +1,42 @@
 # set-classes-visualizer
+![image](https://github.com/NinjaNas/set-class-visualizer/assets/54213302/4bc0edea-91ad-4de8-aba8-4ffaaacc6c7e)
 
-This template should help get you started developing with Vue 3 in Vite.
 
-## Recommended IDE Setup
+This set theory app that displays data from [ForteAPI](https://github.com/NinjaNas/ForteAPI) into a D3Dag that can be used to experiment with sounds and create play-along tracks.
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur) + [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin).
+## How To Use The App
 
-## Type Support for `.vue` Imports in TS
+### Graph
+* Buttons to adjust zoom, transposition, and octaves for the graph are on the top left
+* Zooming is also available using mouse wheel
+* Hovering on a graph node will highlight its children
+* Click on a graph node to audiate the selected set, to open a panel showing the properties of the set, and limit notes not in the set on the piano.
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin) to make the TypeScript language service aware of `.vue` types.
+### Piano
+* Button on bottom left opens the horizontal menu containing the piano, program, and options tabs
+* Octaves on the are controlled by 1,2,3,4,5,6,7,8,9,0,- keys
+* You can also shift up one octave using spacebar and down one octave using caps lock
+* Click on the audio panel buttons to playback any midi file and program
 
-If the standalone TypeScript plugin doesn't feel fast enough to you, Volar has also implemented a [Take Over Mode](https://github.com/johnsoncodehk/volar/discussions/471#discussioncomment-1361669) that is more performant. You can enable it by the following steps:
+### Program
+* This contains a midi player and parser that parses forte numbers using inversion notation to limit notes at a certain timestamp. By loading a midi file, you can use forte numbers create a program that realizes the chord changes.
+* Click the Set @ Time button is a shorthand to append the current selected set, current selected transposition, current selected timestamp in the midi file to the program body
+* Click the Parse Program button to verify and load the program to be played back
 
-1. Disable the built-in TypeScript Extension
-    1) Run `Extensions: Show Built-in Extensions` from VSCode's command palette
-    2) Find `TypeScript and JavaScript Language Features`, right click and select `Disable (Workspace)`
-2. Reload the VSCode window by running `Developer: Reload Window` from the command palette.
+### Options
+* Many options change the graph in various ways such as graph type and graph text
+* Some options improve the performance of the program playback for slower devices
+* There is MIDI support so you can connect a MIDI controller to play
 
-## Customize configuration
+## Technologies Used
+* Vue + TS
+* D3
+* D3Dag
+* JZZ
+  * Standard MIDI Files
+  * Synth Tiny
+  * Input Keyboard
 
-See [Vite Configuration Reference](https://vitejs.dev/config/).
 
-## Project Setup
 
-```sh
-npm install
-```
 
-### Compile and Hot-Reload for Development
-
-```sh
-npm run dev
-```
-
-### Type-Check, Compile and Minify for Production
-
-```sh
-npm run build
-```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-npm run lint
-```
