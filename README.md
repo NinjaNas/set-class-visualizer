@@ -1,5 +1,5 @@
 # set-classes-visualizer
-![image](https://github.com/NinjaNas/set-class-visualizer/assets/54213302/73ea5fe6-310f-4792-862c-3c8a0902b8ed)
+![image](https://github.com/NinjaNas/set-class-visualizer/assets/54213302/bddd8098-7bb7-47b3-a5cf-040028b15576)
 
 This set theory app that displays data from [ForteAPI](https://github.com/NinjaNas/ForteAPI) into a D3Dag that can be used to experiment with sounds and create play-along tracks.
 
