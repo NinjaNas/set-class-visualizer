@@ -7,16 +7,8 @@ onMounted(() => {
   window.addEventListener('wheel', preventCtrlZoom, { passive: false })
 
   if (localStorage.getItem('forteApi') !== forteApiVersion) {
+    localStorage.clear()
     localStorage.setItem('forteApi', forteApiVersion)
-
-    localStorage.removeItem('dag')
-    localStorage.setItem('dag', 'vectororiginaldag')
-
-    localStorage.removeItem('data')
-
-    localStorage.removeItem('hashData')
-    localStorage.removeItem('strictdagprimeforte')
-    localStorage.removeItem('cardinaldagprimeforte')
   }
 })
 
