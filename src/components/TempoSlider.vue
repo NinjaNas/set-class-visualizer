@@ -12,7 +12,7 @@ watch(tempo, () => {
 })
 
 onMounted(() => {
-  $emit('changeTempo', tempo.value)
+  // $emit('changeTempo', tempo.value) done in loadPlayer() func call to prevent null error
   localStorage.setItem('tempo', tempo.value)
 })
 </script>
