@@ -30,7 +30,8 @@ const $emit = defineEmits([
   'jumpPosition',
   'changePositionText',
   'changeParsedProgram',
-  'setIsLooping'
+  'setIsLooping',
+  'changeTempo'
 ])
 
 type ParsedProgram = {
@@ -60,6 +61,7 @@ const loadPlayer = (data: string) => {
   $emit('changeMidiLoaded', true)
   $emit('changePlayer', playerInit)
   $emit('setIsLooping', props.isLooping) // reset looping value for new player
+  $emit('changeTempo', localStorage.getItem('tempo') ? localStorage.getItem('tempo') : 1.0)
 }
 
 const preloadMidi = async (urlMid: string, urlTxt: string) => {
@@ -524,6 +526,7 @@ watch([programSelect, () => props.firstInteraction], () => {
         @changeIsLooping="(d: boolean) => $emit('changeIsLooping', d)"
         @jumpPosition="(n: number) => $emit('jumpPosition', n)"
         @changePositionText="(n: number) => $emit('changePositionText', n)"
+        @changeTempo="(s: string) => $emit('changeTempo', s)"
       ></PlayPanel>
     </div>
   </div>
@@ -581,7 +584,7 @@ watch([programSelect, () => props.firstInteraction], () => {
 .audio-panel-program-tab {
   margin: 0 auto 0 auto;
   min-width: 271px;
-  padding: 1em 1em 5em 1em;
+  padding: 1em 1em 3.2em 1em;
   border-radius: 10px;
   border: 1px solid var(--color-accent);
   grid-area: c;

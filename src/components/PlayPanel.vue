@@ -3,6 +3,7 @@ import { JZZ } from 'jzz'
 import { Tiny } from 'jzz-synth-tiny'
 import { SMF } from 'jzz-midi-smf'
 import { ref, watch } from 'vue'
+import TempoSlider from './TempoSlider.vue'
 Tiny(JZZ)
 SMF(JZZ)
 
@@ -22,7 +23,8 @@ const $emit = defineEmits([
   'changeIsPaused',
   'changeIsLooping',
   'jumpPosition',
-  'changePositionText'
+  'changePositionText',
+  'changeTempo'
 ])
 
 const playButtonHandler = () => {
@@ -136,6 +138,7 @@ watch(
     @mousedown="isSliderInput = true"
     id="duration"
   />
+  <TempoSlider @changeTempo="(s: string) => $emit('changeTempo', s)"></TempoSlider>
 </template>
 
 <style>

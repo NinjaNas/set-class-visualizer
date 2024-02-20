@@ -430,6 +430,7 @@ onUnmounted(() => {
         @changeIsLooping="(d: boolean) => $emit('changeIsLooping', d)"
         @jumpPosition="(n: number) => $emit('jumpPosition', n)"
         @changePositionText="(n: number) => $emit('changePositionText', n)"
+        @changeTempo="(s: string) => $emit('changeTempo', s)"
       ></PlayPanel>
       <SwitchMidiButton
         :firstInteraction="firstInteraction"
