@@ -196,7 +196,12 @@ const parse = () => {
     changeLocation(delimiter) // add the length of the delimiter, after parsing delimiter error
 
     // read until next delimiter or whitespace
-    while (src[0] && !delimiters.includes(src[0]) && testWhiteSpace(src[0]) !== ' ') {
+    while (
+      src[0] &&
+      !delimiters.includes(src[0]) &&
+      !optionalDelimiters.includes(src[0]) &&
+      testWhiteSpace(src[0]) !== ' '
+    ) {
       char = src.shift()
       token += char
     }
@@ -206,7 +211,7 @@ const parse = () => {
     changeLocation(token) // add the length of the token after validating the token
 
     // read whitespace until next delimiter
-    while (src[0] && !delimiters.includes(src[0])) {
+    while (src[0] && !delimiters.includes(src[0]) && !optionalDelimiters.includes(src[0])) {
       char = src.shift()
       changeLocation(char) // add the length of the whitespace
     }
@@ -305,6 +310,16 @@ const parse = () => {
     }
   }
 
+  const parseComment = (): void => {
+    let char: string | undefined = ''
+
+    while (src[0] && src[0] !== '\n') {
+      char = src.shift()
+      changeLocation(char) // add the length of the char
+    }
+    changeLocation('\n') // parse will skip the \n so manually add it
+  }
+
   const src = textInput.value.split('')
 
   const errorStack: string[] = []
@@ -316,6 +331,7 @@ const parse = () => {
   const timestampArr: string[] = []
 
   const delimiters = ['F', 'T', '@']
+  const optionalDelimiters = ['#']
   let currDelimiter = 0
   let firstDelimiterRead = false
 
@@ -326,6 +342,9 @@ const parse = () => {
   while (src.length > 0) {
     const nextChar = src.shift()
     switch (nextChar) {
+      case '#':
+        parseComment()
+        break
       case 'F':
         parseDelimiters('F', forteArr, forteValidation)
         break
