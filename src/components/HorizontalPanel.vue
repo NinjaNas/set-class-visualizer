@@ -118,7 +118,11 @@ const changePositionText = (n: number) => {
   position.value = n
 }
 
-const resizeHandler = (event: MouseEvent) => {
+const changeTempo = (s: string) => {
+  player.value.speed(s)
+}
+
+const resizeMouseHandler = (event: MouseEvent) => {
   if (!container.value) return
   if (!containerHeight.value) {
     containerHeight.value = container.value.clientHeight
@@ -139,6 +143,29 @@ const resizeHandler = (event: MouseEvent) => {
   }
 
   document.addEventListener('mousemove', handleMouseMove)
+  document.addEventListener('mouseup', stopResizing)
+}
+
+const resizeTouchHandler = (event: TouchEvent) => {
+  if (!container.value) return
+  if (!containerHeight.value) {
+    containerHeight.value = container.value.clientHeight
+  }
+
+  const startY = event.touches[0].clientY
+  const initialHeight = containerHeight.value
+  const handleTouchMove = (event: MouseEvent) => {
+    if (event.clientY > 10 && event.clientY < window.innerHeight - 10) {
+      const deltaY = event.clientY - startY
+      containerHeight.value = initialHeight - deltaY
+    }
+  }
+
+  const stopResizing = () => {
+    document.removeEventListener('mousemove', handleTouchMove)
+    document.removeEventListener('mouseup', stopResizing)
+  }
+  document.addEventListener('mousemove', handleTouchMove)
   document.addEventListener('mouseup', stopResizing)
 }
 
@@ -291,7 +318,11 @@ onMounted(() => {
       :style="{ height: containerHeight + 'px' }"
       ref="container"
     >
-      <div class="horizontal-container-resize" @mousedown="resizeHandler"></div>
+      <div
+        class="horizontal-container-resize"
+        @mousedown="resizeMouseHandler"
+        @touchstart="resizeTouchHandler"
+      ></div>
       <div class="overflow-y-wrapper">
         <a @click="$emit('closeModal')" class="menuCloseHorizontal"></a>
         <ul class="tabs">
@@ -324,6 +355,7 @@ onMounted(() => {
           @changeIsLooping="changeIsLooping"
           @jumpPosition="jumpPosition"
           @changePositionText="changePositionText"
+          @changeTempo="changeTempo"
         ></PianoTab>
         <ProgramInput
           v-show="activeTab === 'program'"
@@ -348,6 +380,7 @@ onMounted(() => {
           @changePositionText="changePositionText"
           @changeParsedProgram="(d: ParsedProgram[]) => $emit('changeParsedProgram', d)"
           @setIsLooping="setIsLooping"
+          @changeTempo="changeTempo"
         ></ProgramInput>
         <OptionsTab
           v-show="activeTab === 'options'"
