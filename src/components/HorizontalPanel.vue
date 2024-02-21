@@ -278,15 +278,10 @@ watch(
 )
 
 const resizeBasedOnOrientation = () => {
-  const resizeContainerToFit = () => {
+  screen.orientation.addEventListener('change', () => {
     if (containerHeight.value && containerHeight.value > window.innerHeight) {
       containerHeight.value = window.innerHeight - 10
     }
-  }
-
-  screen.orientation.addEventListener('change', async () => {
-    await nextTick()
-    resizeContainerToFit()
   })
 }
 
