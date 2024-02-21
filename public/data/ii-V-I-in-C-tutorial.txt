@@ -1,0 +1,54 @@
+# TUTORIAL:
+#
+# Play with a backing track and mark/outline the chord changes
+# with forte numbers!
+#
+# You can resize this window in the bottom right corner
+#
+# There are 6 types of special symbols as follows: FT@[]#
+#
+# # denotes a comment, words after it are ignored for this line
+#
+# A complete and valid 'token' contains:
+#
+# F followed by a valid Forte Number in inversion notation
+#
+# T followed by a transposition (0-11) of the Forte Number
+#
+# @ followed by timestamp in milliseconds of the chord change
+#
+# [write anything here to be shown, and close with]
+# Ex. keys to press, chord symbol, scale, forte number
+#
+# The program must be made up of only complete tokens
+# No whitespace can follow the F, T, and @ symbols
+# It must follow the same order as shown above
+#
+# There does not have a be a newline, its only there
+# for readability
+#
+# CUSTOM PROGRAM:
+#
+# Create a custom program using the program select dropdown
+# and select custom
+# 
+# Add a midi file from your local system
+#
+# Use the Add Set @ Time button to easily set the token based
+# on the current selected set on the graph, the current
+# transposition and the current timestamp in the midi
+#
+# Once done hit Parse Program, it will tell you if the 
+# program is valid
+# 
+# If its not valid, it will provide an error message with 
+# the reason and the line and character location of the error 
+#
+# Then, you can simply run it in the audio panel and play
+# it in the Piano tab :)
+#
+# Example Below
+
+F4-26T9@0[Dm7] # ii (add extra info here as a comment!)
+F4-27BT11@3048[G7] # V
+F4-20T11@6074[CM7] # I
