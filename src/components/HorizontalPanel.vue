@@ -173,7 +173,7 @@ watch(isLooping, () => {
 })
 
 const getCurrParsedObj = () => {
-  if (!props.parsedProgram) return
+  if (!props.parsedProgram || !props.parsedProgram.length) return
   const res =
     props.hashData[props.parsedProgram[currIndexProgram.value].forte]
       .replace(/10/, 'T')

@@ -230,8 +230,6 @@ const parse = () => {
       char = src.shift()
       changeLocation(char) // add the length of the whitespace
     }
-
-    if (!firstDelimiterRead) firstDelimiterRead = true
   }
 
   const forteValidation = (token: string, errorStack: string[]): void => {
@@ -353,7 +351,7 @@ const parse = () => {
   const delimiters = ['F', 'T', '@', '[', ']']
   const optionalDelimiters = ['#']
   let currDelimiter = 0
-  let firstDelimiterRead = false
+  let firstNonWhitespaceRead = false
 
   // used to prevent duplicate timestamps
   const seen = new Set()
@@ -378,17 +376,20 @@ const parse = () => {
         parseDelimiters('[', scoreArr, scoreValidation, ']')
         break
       default:
+        if (firstNonWhitespaceRead || testWhiteSpace(nextChar) !== ' ') {
+          firstNonWhitespaceRead = true
+        }
         break
     }
   }
 
-  if (!firstDelimiterRead) {
-    const missingDelimiters = "'F', 'T', '@', '[', and ']'"
-    const error =
-      `[${location.lineNumber}:${location.charNumber}] Incomplete program, missing delimiters ` +
-      missingDelimiters
-    errorStack.push(error)
-  } else if (!errorStack.length) {
+  if (!errorStack.length) {
+    if (firstNonWhitespaceRead) {
+      errorStack.push(
+        "If you are trying to create an empty program delete all non-whitespace characters, else make a complete token using 'F', 'T', '@', '[', and ']'"
+      )
+    }
+
     let missingDelimiters = ''
 
     switch (currDelimiter) {
@@ -433,7 +434,6 @@ const parse = () => {
     }
 
     res.sort(compareByTimestamp) // sort by increasing timestamp
-    console.log(res)
 
     errorMessages.value = null
     isValidProgram.value = true
