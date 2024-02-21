@@ -1,14 +1,18 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted } from 'vue'
 import D3DagVisual from './components/D3DagVisual.vue'
-import { forteApiVersion } from './constants/constants'
+import { forteApiVersion, websiteVersion } from './constants/constants'
 
 onMounted(() => {
   window.addEventListener('wheel', preventCtrlZoom, { passive: false })
 
-  if (localStorage.getItem('forteApi') !== forteApiVersion) {
+  if (
+    localStorage.getItem('forteApi') !== forteApiVersion ||
+    localStorage.getItem('websiteVer') !== websiteVersion
+  ) {
     localStorage.clear()
     localStorage.setItem('forteApi', forteApiVersion)
+    localStorage.setItem('websiteVer', websiteVersion)
   }
 })
 
