@@ -98,6 +98,7 @@ defineProps<{
   grid-column: span 1;
   font-weight: bold;
   text-decoration: underline;
+  grid-column: span 2;
 }
 
 .options-container {
@@ -118,9 +119,6 @@ defineProps<{
   .options-container {
     grid-template-columns: repeat(2, min-content);
     padding: 2em 8em 2em 8em;
-  }
-  .col-span-2-option-header {
-    grid-column: span 2;
   }
 }
 </style>
