@@ -55,7 +55,7 @@ const programSelect = ref<string>(
 const isCustom = ref<boolean>(false)
 const presetMidi = ref<string>('')
 
-const loadPlayer = (data: string) => {
+const loadPlayer = (data: Uint8Array) => {
   errorMessages.value = null
   isValidProgram.value = false
   const playerInit = JZZ.MIDI.SMF(data).player()
@@ -90,15 +90,10 @@ const preloadMidi = async (urlMid: string, urlTxt: string) => {
     const resMidi = await fetch(urlMid + '.mid')
     if (resMidi.ok) {
       const buffer = await resMidi.arrayBuffer()
-      let data = ''
       const bytes = new Uint8Array(buffer)
-      for (let i = 0; i < bytes.length; i++) {
-        data += String.fromCharCode(bytes[i])
-      }
 
       presetMidi.value = urlMid.split('/')[1]
-
-      loadPlayer(data)
+      loadPlayer(bytes)
     } else {
       console.log('Not 200', resMidi)
     }
@@ -129,14 +124,10 @@ const loadMidi = (input: Event) => {
     const reader = new FileReader()
     // runs after file is read
     reader.onload = (e) => {
-      let data = ''
       const target = e.target
       if (target && target.result instanceof ArrayBuffer) {
         const bytes = new Uint8Array(target.result)
-        for (let i = 0; i < bytes.length; i++) {
-          data += String.fromCharCode(bytes[i])
-        }
-        loadPlayer(data)
+        loadPlayer(bytes)
       }
     }
     reader.readAsArrayBuffer(file) // read file
@@ -511,7 +502,7 @@ watch([programSelect, () => props.firstInteraction], () => {
           </option>
           <option value="data/ii-V-I-in-C|data/ii-V-I-in-C-modal">Modal</option>
           <option disabled>Blue Bossa 80BPM</option>
-          <option value="data/blue-bossa|data/blue-bossa-chord-tones">Chord Tones</option>
+          <option value="data/blue-bossa-solo|data/blue-bossa-solo-chord-tones">Chord Tones</option>
           <option disabled>Custom</option>
           <option value="custom">Custom</option>
         </select>
