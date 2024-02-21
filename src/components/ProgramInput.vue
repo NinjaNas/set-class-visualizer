@@ -50,7 +50,7 @@ const isValidProgram = ref<boolean>(false)
 const isModified = ref<boolean>(false)
 const localProgramSelect = localStorage.getItem('programSelect')
 const programSelect = ref<string>(
-  localProgramSelect ? localProgramSelect : 'data/blue-bossa-160bpm|data/blue-bossa-modal-160bpm'
+  localProgramSelect ? localProgramSelect : 'data/ii-V-I-in-C|data/ii-V-I-in-C-tutorial'
 )
 const isCustom = ref<boolean>(false)
 const presetMidi = ref<string>('')
@@ -497,57 +497,32 @@ watch([programSelect, () => props.firstInteraction], () => {
     <div class="piano-inner-grid-container program-panel">
       <h2 style="font-weight: bold; text-decoration: underline; padding: 0">Program Panel</h2>
       <div>
-        <label for="programSelect">Program Select:</label>
+        <label for="programSelect" style="padding-right: 1em">Program Select:</label>
         <select id="programSelect" name="programSelect" v-model="programSelect">
-          <option disabled>ii-V-I in C</option>
-          <option value="data/ii-V-I-in-C-80bpm|data/ii-V-I-in-C-chord-tones-80bpm">
-            80 BPM (Chord Tones)
+          <option disabled>Program Tutorial</option>
+          <option value="data/ii-V-I-in-C|data/ii-V-I-in-C-tutorial">Tutorial</option>
+          <option disabled>ii-V-I in C 160BPM</option>
+          <option value="data/ii-V-I-in-C|data/ii-V-I-in-C-chord-tones">Chord Tones</option>
+          <option value="data/ii-V-I-in-C|data/ii-V-I-in-C-chord-tones-9th">
+            Chord Tones + 9th
           </option>
-          <option value="data/ii-V-I-in-C-80bpm|data/ii-V-I-in-C-chord-tones-9th-80bpm">
-            80 BPM (Chord Tones + 9th)
+          <option value="data/ii-V-I-in-C|data/ii-V-I-in-C-chord-tones-half-step-below">
+            Half Step Below Approach
           </option>
-          <option value="data/ii-V-I-in-C-80bpm|data/ii-V-I-in-C-chord-tones-half-step-below-80bpm">
-            80 BPM (Half Step Below Approach)
-          </option>
-          <option value="data/ii-V-I-in-C-80bpm|data/ii-V-I-in-C-modal-80bpm">
-            80 BPM (Modal)
-          </option>
-          <option value="data/ii-V-I-in-C-160bpm|data/ii-V-I-in-C-chord-tones-160bpm">
-            160 BPM (Chord Tones)
-          </option>
-          <option value="data/ii-V-I-in-C-160bpm|data/ii-V-I-in-C-chord-tones-9th-160bpm">
-            160 BPM (Chord Tones + 9th)
-          </option>
-          <option
-            value="data/ii-V-I-in-C-160bpm|data/ii-V-I-in-C-chord-tones-half-step-below-160bpm"
-          >
-            160 BPM (Half Step Below Approach)
-          </option>
-          <option value="data/ii-V-I-in-C-160bpm|data/ii-V-I-in-C-modal-160bpm">
-            160 BPM (Modal)
-          </option>
-          <option disabled>Blue Bossa</option>
-          <option value="data/blue-bossa-80bpm|data/blue-bossa-chord-tones-80bpm">
-            80 BPM (Chord Tones)
-          </option>
-          <option value="data/blue-bossa-80bpm|data/blue-bossa-modal-80bpm">80 BPM (Modal)</option>
-          <option value="data/blue-bossa-160bpm|data/blue-bossa-chord-tones-160bpm">
-            160 BPM (Chord Tones)
-          </option>
-          <option value="data/blue-bossa-160bpm|data/blue-bossa-modal-160bpm">
-            160 BPM (Modal)
-          </option>
+          <option value="data/ii-V-I-in-C|data/ii-V-I-in-C-modal">Modal</option>
+          <option disabled>Blue Bossa 80BPM</option>
+          <option value="data/blue-bossa|data/blue-bossa-chord-tones">Chord Tones</option>
           <option disabled>Custom</option>
           <option value="custom">Custom</option>
         </select>
       </div>
       <div>
-        <label v-if="isCustom" for="load-midi">Load Midi:</label>
+        <label v-if="isCustom" for="load-midi" style="padding-right: 1em">Load Midi:</label>
         <input
           v-if="isCustom"
           ref="midiFileInput"
           id="load-midi"
-          style="max-width: 230px"
+          style="max-width: 200px"
           @change="loadMidi"
           type="file"
           accept=".mid"
@@ -633,17 +608,17 @@ watch([programSelect, () => props.firstInteraction], () => {
   border: 1px solid var(--color-accent);
   grid-column: span 2;
   grid-area: b;
-  min-height: 224px;
+  min-height: 228px;
 }
 
 .program-panel {
   grid-area: a;
   margin: 0 auto 0 auto;
-  width: min-content;
+  width: 100%;
   padding: 1em;
   border-radius: 10px;
   border: 1px solid var(--color-accent);
-  min-height: 224px;
+  min-height: 228px;
 }
 
 .audio-panel-program-tab {
@@ -653,7 +628,7 @@ watch([programSelect, () => props.firstInteraction], () => {
   border-radius: 10px;
   border: 1px solid var(--color-accent);
   grid-area: c;
-  min-height: 224px;
+  min-height: 228px;
 }
 
 @media only screen and (min-width: 720px) {
@@ -663,6 +638,9 @@ watch([programSelect, () => props.firstInteraction], () => {
     grid-template-areas:
       'a c'
       'b b';
+  }
+  .audio-panel-program-tab {
+    min-height: 240px;
   }
 }
 
@@ -675,6 +653,7 @@ watch([programSelect, () => props.firstInteraction], () => {
   }
   .program-panel {
     grid-area: auto;
+    width: fit-content;
   }
   .import-program-panel {
     grid-column: span 1;
@@ -682,6 +661,7 @@ watch([programSelect, () => props.firstInteraction], () => {
   }
   .audio-panel-program-tab {
     grid-area: auto;
+    min-height: 228px;
   }
 }
 </style>
