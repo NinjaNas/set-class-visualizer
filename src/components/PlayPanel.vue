@@ -24,7 +24,8 @@ const $emit = defineEmits([
   'changeIsLooping',
   'jumpPosition',
   'changePositionText',
-  'changeTempo'
+  'changeTempo',
+  'changeIsSliderInput'
 ])
 
 const playButtonHandler = () => {
@@ -52,6 +53,10 @@ watch(
     }
   }
 )
+
+watch(isSliderInput, () => {
+  $emit('changeIsSliderInput', isSliderInput.value)
+})
 </script>
 
 <template>

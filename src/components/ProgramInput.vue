@@ -31,7 +31,8 @@ const $emit = defineEmits([
   'changePositionText',
   'changeParsedProgram',
   'setIsLooping',
-  'changeTempo'
+  'changeTempo',
+  'changeIsSliderInput'
 ])
 
 type ParsedProgram = {
@@ -558,6 +559,7 @@ watch([programSelect, () => props.firstInteraction], () => {
         @jumpPosition="(n: number) => $emit('jumpPosition', n)"
         @changePositionText="(n: number) => $emit('changePositionText', n)"
         @changeTempo="(s: string) => $emit('changeTempo', s)"
+        @changeIsSliderInput="(b: boolean) => $emit('changeIsSliderInput', b)"
       ></PlayPanel>
     </div>
   </div>

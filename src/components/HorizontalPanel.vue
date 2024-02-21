@@ -54,6 +54,7 @@ const duration = ref<number>(0)
 const player = ref<null | any>(null)
 const positionDebounce = ref<number>(100)
 const score = ref<{ curr: string; next: string }>({ curr: '', next: '' })
+const isSliderInput = ref<boolean>(false)
 
 const changeMidiIn = (s: string) => {
   selectedMidiIn.value = s ? s : ''
@@ -245,28 +246,51 @@ const changePositionDebounce = (s: string) => {
   isPlaying.value = 'false' // stop player because positionDebounce needs a reset to work
 }
 
-watch(
-  [currIndexProgram, isPlaying, position],
-  ([newCurrIndex, newIsPlaying], [oldCurrIndex, oldIsPlaying]) => {
-    if (!props.parsedProgram) return
+const changeIsSliderInput = (b: boolean) => {
+  isSliderInput.value = b
+}
 
-    if (isPlaying.value === 'false') {
-      // need to check on every position change because user can use the slider
-      findCurrIndex()
-      // get the correct transposed set as a string, reformatted for d3dag
-      getCurrParsedObj()
-    }
+watch(
+  [currIndexProgram, isPlaying, position, isSliderInput],
+  (
+    [newCurrIndex, newIsPlaying, newPosition, newIsSliderInput],
+    [oldCurrIndex, oldIsPlaying, oldPosition, oldIsSliderInput]
+  ) => {
+    if (!props.parsedProgram || !props.parsedProgram.length) return
 
     if (currIndexProgram.value >= props.parsedProgram.length) {
       return
     }
 
     switch (isPlaying.value) {
+      case 'false':
+        if (isSliderInput.value) {
+          // need to check on every position change because user can use the slider
+          findCurrIndex()
+        } else if (newIsSliderInput === oldIsSliderInput) {
+          // set to 0, isSliderInput is false and has been false
+          currIndexProgram.value = 0
+        }
+        // get the correct transposed set as a string, reformatted for d3dag
+        getCurrParsedObj()
+        break
+      case 'pause':
+        findCurrIndex()
+        getCurrParsedObj()
+        break
       case 'resume':
       case 'true':
-        // need to check on every position change because user can use the slider
-        findCurrIndex()
-        // get the correct transposed set as a string, reformatted for d3dag
+        if (isSliderInput.value) {
+          findCurrIndex()
+        } else if (
+          props.parsedProgram.length > currIndexProgram.value + 1 &&
+          newPosition >= parseInt(props.parsedProgram[currIndexProgram.value + 1].timestamp)
+        ) {
+          // increment by 1 if the next position is greater than or equal to the timestamp for the next token
+          currIndexProgram.value += 1
+        }
+
+        // only run when needed
         if (newCurrIndex !== oldCurrIndex || newIsPlaying !== oldIsPlaying) {
           getCurrParsedObj()
         }
@@ -352,6 +376,7 @@ onMounted(() => {
           @jumpPosition="jumpPosition"
           @changePositionText="changePositionText"
           @changeTempo="changeTempo"
+          @changeIsSliderInput="changeIsSliderInput"
         ></PianoTab>
         <ProgramInput
           v-show="activeTab === 'program'"
@@ -377,6 +402,7 @@ onMounted(() => {
           @changeParsedProgram="(d: ParsedProgram[]) => $emit('changeParsedProgram', d)"
           @setIsLooping="setIsLooping"
           @changeTempo="changeTempo"
+          @changeIsSliderInput="changeIsSliderInput"
         ></ProgramInput>
         <OptionsTab
           v-show="activeTab === 'options'"
