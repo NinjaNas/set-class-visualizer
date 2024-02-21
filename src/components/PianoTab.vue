@@ -43,6 +43,10 @@ const filter = ref<any>(
     _receive: function (msg: any) {
       msg[2] = vel.value
       this._emit(msg)
+      const octave = Math.floor(msg[1] / 12)
+      if (currOctave.value !== octave) {
+        changeOctave(octave)
+      }
     }
   })
 )
@@ -179,6 +183,10 @@ const enableKeypress = () => {
     _receive: function (msg: any) {
       msg[2] = vel.value
       this._emit(msg)
+      const octave = Math.floor(msg[1] / 12)
+      if (currOctave.value !== octave) {
+        changeOctave(octave)
+      }
     }
   })
   connectPiano()
@@ -206,6 +214,10 @@ const changeFilter = () => {
       } else {
         msg[2] = 0
         this._emit(msg)
+      }
+      const octave = Math.floor(msg[1] / 12)
+      if (currOctave.value !== octave) {
+        changeOctave(octave)
       }
     }
   })
