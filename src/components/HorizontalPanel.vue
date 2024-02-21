@@ -280,7 +280,8 @@ watch(
         break
       case 'resume':
       case 'true':
-        if (isSliderInput.value) {
+        if (isSliderInput.value || newPosition < oldPosition) {
+          // if slider input or repeat loop
           findCurrIndex()
         } else if (
           props.parsedProgram.length > currIndexProgram.value + 1 &&
