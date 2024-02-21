@@ -22,7 +22,7 @@ onMounted(() => {
     <label for="tempo">Tempo:</label>
     <label for="tempo">{{ Math.floor(parseFloat(tempo) * 100) + '%' }}</label>
   </div>
-  <input type="range" step="0.1" min="0.1" max="2.0" v-model="tempo" class="slider" id="tempo" />
+  <input type="range" step="0.01" min="0.1" max="2.0" v-model="tempo" class="slider" id="tempo" />
 </template>
 
 <style>
