@@ -38,6 +38,7 @@ type ParsedProgram = {
   forte: string
   transposition: string
   timestamp: string
+  score: string
 }
 
 const textInput = ref<string>('')
@@ -150,6 +151,7 @@ const addCurrentSelection = () => {
     props.transposition.toString() +
     '@' +
     props.player.positionMS().toFixed() +
+    '[]' +
     '\n'
   textAreaChangeHandler(1) // add extra newline of height
 }
@@ -181,7 +183,8 @@ const parse = () => {
   const parseDelimiters = (
     delimiter: string,
     arr: string[],
-    validateToken: (token: string, errorStack: string[]) => void
+    validateToken: (token: string, errorStack: string[]) => void,
+    balanced: string = ''
   ): void => {
     let token = ''
     let char: string | undefined = ''
@@ -206,9 +209,28 @@ const parse = () => {
       token += char
     }
 
-    validateToken(token, errorStack) // validate after full token is read
-    arr.push(token) // push token, even on error
-    changeLocation(token) // add the length of the token after validating the token
+    if (balanced) {
+      while (
+        src[0] &&
+        src[0] !== balanced &&
+        !optionalDelimiters.includes(src[0]) &&
+        testWhiteSpace(src[0]) !== ' '
+      ) {
+        char = src.shift()
+        token += char
+      }
+      if (src[0] === balanced) {
+        char = src.shift()
+        changeLocation(char) // add the length of the balanced delimiter
+        incrementCurrDelimiter()
+      }
+    }
+
+    if (!balanced) {
+      validateToken(token, errorStack) // validate after full token is read
+      arr.push(token) // push token, even on error
+      changeLocation(token) // add the length of the token after validating the token
+    }
 
     // read whitespace until next delimiter
     while (src[0] && !delimiters.includes(src[0]) && !optionalDelimiters.includes(src[0])) {
@@ -310,6 +332,10 @@ const parse = () => {
     }
   }
 
+  const scoreValidation = (token: string, errorStack: string[]): void => {
+    return
+  }
+
   const parseComment = (): void => {
     let char: string | undefined = ''
 
@@ -329,8 +355,9 @@ const parse = () => {
   const forteArr: string[] = []
   const transpositionArr: string[] = []
   const timestampArr: string[] = []
+  const scoreArr: string[] = []
 
-  const delimiters = ['F', 'T', '@']
+  const delimiters = ['F', 'T', '@', '[', ']']
   const optionalDelimiters = ['#']
   let currDelimiter = 0
   let firstDelimiterRead = false
@@ -354,20 +381,44 @@ const parse = () => {
       case '@':
         parseDelimiters('@', timestampArr, timestampValidation)
         break
+      case '[':
+        parseDelimiters('[', scoreArr, scoreValidation, ']')
+        break
       default:
         break
     }
   }
 
   if (!firstDelimiterRead) {
-    const error = `[${location.lineNumber}:${location.charNumber}] Not a valid program, missing delimiters 'F', 'T', and '@'`
+    const missingDelimiters = "'F', 'T', '@', '[', and ']'"
+    const error =
+      `[${location.lineNumber}:${location.charNumber}] Incomplete program, missing delimiters ` +
+      missingDelimiters
     errorStack.push(error)
-  } else if (currDelimiter === 1) {
-    const error = `[${location.lineNumber}:${location.charNumber}] Incomplete program, missing delimiters 'T' and '@'`
-    errorStack.push(error)
-  } else if (currDelimiter === 2) {
-    const error = `[${location.lineNumber}:${location.charNumber}] Incomplete program, missing delimiter '@'`
-    errorStack.push(error)
+  } else if (!errorStack.length) {
+    let missingDelimiters = ''
+
+    switch (currDelimiter) {
+      case 1:
+        missingDelimiters = "'T', '@', '[', and ']'"
+        break
+      case 2:
+        missingDelimiters = "'@', '[', and ']'"
+        break
+      case 3:
+        missingDelimiters = "'[' and ']'"
+        break
+      case 4:
+        missingDelimiters = "']'"
+        break
+    }
+
+    if (missingDelimiters) {
+      const error =
+        `[${location.lineNumber}:${location.charNumber}] Incomplete program, missing delimiters ` +
+        missingDelimiters
+      errorStack.push(error)
+    }
   }
 
   function compareByTimestamp(a: ParsedProgram, b: ParsedProgram) {
@@ -378,12 +429,13 @@ const parse = () => {
     errorMessages.value = errorStack
     isValidProgram.value = false
   } else {
-    const res: { forte: string; transposition: string; timestamp: string }[] = []
+    const res: { forte: string; transposition: string; timestamp: string; score: string }[] = []
     for (let i = 0; i < forteArr.length; i++) {
       res.push({
         forte: forteArr[i],
         transposition: transpositionArr[i],
-        timestamp: timestampArr[i]
+        timestamp: timestampArr[i],
+        score: scoreArr[i]
       })
     }
 
