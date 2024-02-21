@@ -27,6 +27,26 @@
 # There does not have a be a newline, its only there
 # for readability
 #
+# The tokens do not have to be in order based on the timestamp,
+# the parser will automatically sort the tokens
+#
+# You can create a empty program if you do not want the chords to
+# change, then select a set from the graph
+#
+# All the default midi and txt data files are on GitHub
+# https://github.com/NinjaNas/set-class-visualizer/tree/main/public/data
+# Please, make a pull request if you want to add a new file
+# Add attributions to the top of the txt data file
+# Example:
+################################################################
+#
+# Title: ii-V-I-in-C
+# Composer: Khang Tran
+# Arranger:
+# Lyricist:
+#
+################################################################
+#
 # CUSTOM PROGRAM:
 #
 # Create a custom program using the program select dropdown
