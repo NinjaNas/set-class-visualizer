@@ -228,7 +228,7 @@ select {
 }
 
 body {
-  min-height: 100vh;
+  min-height: 100%;
   color: var(--color-text);
   background: var(--color-background);
   line-height: 1.6;
@@ -250,4 +250,8 @@ body {
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  -webkit-overflow-scrolling: touch;
+  /* iOS velocity scrolling */
+  margin: 0;
+  overflow: hidden;
 }
