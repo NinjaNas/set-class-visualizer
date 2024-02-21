@@ -24,7 +24,8 @@ const props = defineProps<{
   duration: number
   activeTab: string
   firstInteraction: boolean
-  parsedProgram: null | { forte: string; transposition: string; timestamp: string }[]
+  parsedProgram: null | { forte: string; transposition: string; timestamp: string; score: string }[]
+  score: { curr: string; next: string }
 }>()
 
 let synth: null | any = null
@@ -404,7 +405,7 @@ onUnmounted(() => {
 
 <template>
   <div class="piano-container">
-    <div></div>
+    <div>{{ score.curr }} {{ score.next }}</div>
     <div class="piano-inner-grid-container">
       <ul class="octave-switches">
         <li

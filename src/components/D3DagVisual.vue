@@ -79,9 +79,9 @@ const verticalPanelToggle = ref<boolean>(true)
 const isHorizontalPanelOpen = ref<boolean>(false)
 const focusPanel = ref<string>('horizontal')
 const textFieldFocused = ref<boolean>(false)
-const parsedProgram = ref<null | { forte: string; transposition: string; timestamp: string }[]>(
-  null
-)
+const parsedProgram = ref<
+  null | { forte: string; transposition: string; timestamp: string; score: string }[]
+>(null)
 const firstInteraction = ref<boolean>(false)
 const loading = ref<boolean>(true)
 
@@ -555,7 +555,9 @@ const changeGraphVel = (s: string) => {
   graphVel.value = parseInt(s)
 }
 
-const changeParsedProgram = (d: { forte: string; transposition: string; timestamp: string }[]) => {
+const changeParsedProgram = (
+  d: { forte: string; transposition: string; timestamp: string; score: string }[]
+) => {
   parsedProgram.value = d
 }
 

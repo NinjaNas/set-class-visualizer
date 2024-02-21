@@ -12,7 +12,7 @@ const props = defineProps<{
   transposition: number
   hashData: { [key: string]: string }
   hashVecData: { [key: string]: string }
-  parsedProgram: null | { forte: string; transposition: string; timestamp: string }[]
+  parsedProgram: null | { forte: string; transposition: string; timestamp: string; score: string }[]
   firstInteraction: boolean
 }>()
 
@@ -53,6 +53,7 @@ const position = ref<number>(0)
 const duration = ref<number>(0)
 const player = ref<null | any>(null)
 const positionDebounce = ref<number>(100)
+const score = ref<{ curr: string; next: string }>({ curr: '', next: '' })
 
 const changeMidiIn = (s: string) => {
   selectedMidiIn.value = s ? s : ''
@@ -205,6 +206,18 @@ const getCurrParsedObj = () => {
     '|' +
     props.hashVecData[props.parsedProgram[currIndexProgram.value].forte].replace(/[<,>]/g, '')
 
+  if (currIndexProgram.value + 1 < props.parsedProgram.length) {
+    score.value = {
+      curr: props.parsedProgram[currIndexProgram.value].score ?? '',
+      next: props.parsedProgram[currIndexProgram.value + 1].score ?? ''
+    }
+  } else {
+    score.value = {
+      curr: props.parsedProgram[currIndexProgram.value].score ?? '',
+      next: ''
+    }
+  }
+
   $emit(
     'changeSelectedSet',
     res,
@@ -351,6 +364,7 @@ onMounted(() => {
           :activeTab="activeTab"
           :parsedProgram="parsedProgram"
           :firstInteraction="firstInteraction"
+          :score="score"
           @changeIsPlaying="changeIsPlaying"
           @changeIsLooping="changeIsLooping"
           @jumpPosition="jumpPosition"

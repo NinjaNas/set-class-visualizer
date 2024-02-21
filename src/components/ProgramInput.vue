@@ -210,12 +210,7 @@ const parse = () => {
     }
 
     if (balanced) {
-      while (
-        src[0] &&
-        src[0] !== balanced &&
-        !optionalDelimiters.includes(src[0]) &&
-        testWhiteSpace(src[0]) !== ' '
-      ) {
+      while (src[0] && src[0] !== balanced && !optionalDelimiters.includes(src[0])) {
         char = src.shift()
         token += char
       }
@@ -226,11 +221,9 @@ const parse = () => {
       }
     }
 
-    if (!balanced) {
-      validateToken(token, errorStack) // validate after full token is read
-      arr.push(token) // push token, even on error
-      changeLocation(token) // add the length of the token after validating the token
-    }
+    validateToken(token, errorStack) // validate after full token is read
+    arr.push(token) // push token, even on error
+    changeLocation(token) // add the length of the token after validating the token
 
     // read whitespace until next delimiter
     while (src[0] && !delimiters.includes(src[0]) && !optionalDelimiters.includes(src[0])) {
@@ -440,6 +433,7 @@ const parse = () => {
     }
 
     res.sort(compareByTimestamp) // sort by increasing timestamp
+    console.log(res)
 
     errorMessages.value = null
     isValidProgram.value = true
