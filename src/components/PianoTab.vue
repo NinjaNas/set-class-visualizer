@@ -405,8 +405,12 @@ onUnmounted(() => {
 
 <template>
   <div class="piano-container">
-    <div>{{ score.curr }} {{ score.next }}</div>
+    <div></div>
     <div class="piano-inner-grid-container">
+      <div class="score-container">
+        <div class="score-items">Current: {{ score.curr }}</div>
+        <div class="score-items">Next: {{ score.next }}</div>
+      </div>
       <ul class="octave-switches">
         <li
           v-for="(label, index) in octaveSwitchLabels"
@@ -466,6 +470,17 @@ onUnmounted(() => {
   justify-content: center;
   align-items: center;
   gap: 3px;
+}
+
+.score-container {
+  display: grid;
+  align-items: center;
+  grid-template-rows: 1fr;
+  grid-template-columns: 1fr 1fr;
+}
+
+.score-items {
+  overflow-x: auto;
 }
 
 .audio-panel {
