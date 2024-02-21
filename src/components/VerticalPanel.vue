@@ -55,7 +55,7 @@ const findSet = (s: string) => {
   }
 }
 
-const resizeHandler = (event: MouseEvent) => {
+const resizeHandler = (event: PointerEvent) => {
   if (!container.value) return
   if (!containerWidth.value) {
     containerWidth.value = container.value.clientWidth
@@ -63,7 +63,7 @@ const resizeHandler = (event: MouseEvent) => {
 
   const startX = event.clientX
   const initialWidth = containerWidth.value
-  const handleMouseMove = (event: MouseEvent) => {
+  const handleMove = (event: PointerEvent) => {
     if (event.clientX > 10 && event.clientX < window.innerWidth - 10) {
       const deltaX = event.clientX - startX
       containerWidth.value = initialWidth - deltaX
@@ -71,13 +71,14 @@ const resizeHandler = (event: MouseEvent) => {
   }
 
   const stopResizing = () => {
-    document.removeEventListener('mousemove', handleMouseMove)
-    document.removeEventListener('mouseup', stopResizing)
+    document.removeEventListener('pointermove', handleMove)
+    document.removeEventListener('pointerup', stopResizing)
   }
 
-  document.addEventListener('mousemove', handleMouseMove)
-  document.addEventListener('mouseup', stopResizing)
+  document.addEventListener('pointermove', handleMove)
+  document.addEventListener('pointerup', stopResizing)
 }
+
 onMounted(() => {
   watch(
     () => props.isVerticalPanelOpen,
@@ -102,7 +103,7 @@ onMounted(() => {
       @click="$emit('focusVertical')"
       :style="{ width: containerWidth + 'px' }"
     >
-      <div class="vertical-container-resize" @mousedown="resizeHandler"></div>
+      <div class="vertical-container-resize" @pointerdown="resizeHandler"></div>
       <div class="overflow-y-wrapper">
         <a @click="$emit('closeModal')" class="menuClose"></a>
         <div class="data">
@@ -178,6 +179,7 @@ onMounted(() => {
   width: 10px;
   height: 100%;
   cursor: w-resize;
+  touch-action: none;
 }
 
 .data {

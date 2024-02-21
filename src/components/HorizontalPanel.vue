@@ -123,7 +123,7 @@ const changeTempo = (s: string) => {
   player.value.speed(s)
 }
 
-const resizeMouseHandler = (event: MouseEvent) => {
+const resizeHandler = (event: PointerEvent) => {
   if (!container.value) return
   if (!containerHeight.value) {
     containerHeight.value = container.value.clientHeight
@@ -131,7 +131,7 @@ const resizeMouseHandler = (event: MouseEvent) => {
 
   const startY = event.clientY
   const initialHeight = containerHeight.value
-  const handleMouseMove = (event: MouseEvent) => {
+  const handleMove = (event: PointerEvent) => {
     if (event.clientY > 10 && event.clientY < window.innerHeight - 10) {
       const deltaY = event.clientY - startY
       containerHeight.value = initialHeight - deltaY
@@ -139,35 +139,12 @@ const resizeMouseHandler = (event: MouseEvent) => {
   }
 
   const stopResizing = () => {
-    document.removeEventListener('mousemove', handleMouseMove)
-    document.removeEventListener('mouseup', stopResizing)
+    document.removeEventListener('pointermove', handleMove)
+    document.removeEventListener('pointerup', stopResizing)
   }
 
-  document.addEventListener('mousemove', handleMouseMove)
-  document.addEventListener('mouseup', stopResizing)
-}
-
-const resizeTouchHandler = (event: TouchEvent) => {
-  if (!container.value) return
-  if (!containerHeight.value) {
-    containerHeight.value = container.value.clientHeight
-  }
-
-  const startY = event.touches[0].clientY
-  const initialHeight = containerHeight.value
-  const handleTouchMove = (event: MouseEvent) => {
-    if (event.clientY > 10 && event.clientY < window.innerHeight - 10) {
-      const deltaY = event.clientY - startY
-      containerHeight.value = initialHeight - deltaY
-    }
-  }
-
-  const stopResizing = () => {
-    document.removeEventListener('mousemove', handleTouchMove)
-    document.removeEventListener('mouseup', stopResizing)
-  }
-  document.addEventListener('mousemove', handleTouchMove)
-  document.addEventListener('mouseup', stopResizing)
+  document.addEventListener('pointermove', handleMove)
+  document.addEventListener('pointerup', stopResizing)
 }
 
 watch(isPlaying, () => {
@@ -300,6 +277,14 @@ watch(
   }
 )
 
+const resizeBasedOnOrientation = () => {
+  screen.orientation.addEventListener('change', () => {
+    if (containerHeight.value && containerHeight.value > window.innerHeight) {
+      containerHeight.value = window.innerHeight - 10
+    }
+  })
+}
+
 watch(
   () => props.firstInteraction,
   () => {
@@ -319,6 +304,7 @@ onMounted(() => {
       }
     }
   )
+  resizeBasedOnOrientation()
 })
 </script>
 
@@ -331,11 +317,7 @@ onMounted(() => {
       :style="{ height: containerHeight + 'px' }"
       ref="container"
     >
-      <div
-        class="horizontal-container-resize"
-        @mousedown="resizeMouseHandler"
-        @touchstart="resizeTouchHandler"
-      ></div>
+      <div class="horizontal-container-resize" @pointerdown="resizeHandler"></div>
       <div class="overflow-y-wrapper">
         <a @click="$emit('closeModal')" class="menuCloseHorizontal"></a>
         <ul class="tabs">
@@ -454,6 +436,7 @@ onMounted(() => {
   width: 100%;
   height: 10px;
   cursor: n-resize;
+  touch-action: none;
 }
 
 span.inner {
