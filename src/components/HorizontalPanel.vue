@@ -251,6 +251,13 @@ const changeIsSliderInput = (b: boolean) => {
 }
 
 watch(
+  () => props.parsedProgram,
+  () => {
+    findCurrIndex()
+  }
+)
+
+watch(
   [currIndexProgram, isPlaying, position, isSliderInput],
   (
     [newCurrIndex, newIsPlaying, newPosition, newIsSliderInput],
