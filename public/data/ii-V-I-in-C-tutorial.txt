@@ -67,6 +67,9 @@
 # Then, you can simply run it in the audio panel and play
 # it in the Piano tab :)
 #
+# Check out the forte dictionary using the program select dropdown
+# to find the most common forte to chord symbol translation!
+#
 # Example Below
 
 F4-26T9@0[Dm7] # ii (add extra info here as a comment!)

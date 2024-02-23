@@ -493,6 +493,7 @@ watch([programSelect, () => props.firstInteraction], () => {
         <select id="programSelect" name="programSelect" v-model="programSelect">
           <option disabled>Program Tutorial</option>
           <option value="data/ii-V-I-in-C|data/ii-V-I-in-C-tutorial">Tutorial</option>
+          <option value="data/ii-V-I-in-C|data/forte-dictionary">Forte Dictionary</option>
           <option disabled>ii-V-I in C 160BPM</option>
           <option value="data/ii-V-I-in-C|data/ii-V-I-in-C-chord-tones">Chord Tones</option>
           <option value="data/ii-V-I-in-C|data/ii-V-I-in-C-chord-tones-9th">
