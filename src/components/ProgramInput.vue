@@ -505,6 +505,9 @@ watch([programSelect, () => props.firstInteraction], () => {
           <option value="data/ii-V-I-in-C|data/ii-V-I-in-C-modal">Modal</option>
           <option disabled>Blue Bossa 80BPM</option>
           <option value="data/blue-bossa-solo|data/blue-bossa-solo-chord-tones">Chord Tones</option>
+          <option disabled>Misty 65BPM</option>
+          <option value="data/misty-melody|data/misty">With Melody</option>
+          <option value="data/misty|data/misty">Without Melody</option>
           <option disabled>Custom</option>
           <option value="custom">Custom</option>
         </select>
