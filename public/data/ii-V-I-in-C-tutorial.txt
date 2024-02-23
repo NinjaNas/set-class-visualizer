@@ -4,6 +4,7 @@
 # with forte numbers!
 #
 # You can resize this window in the bottom right corner
+# You can resize this entire panel by dragged on the dashed line above
 #
 # There are 6 types of special symbols as follows: FT@[]#
 #
