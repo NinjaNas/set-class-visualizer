@@ -163,7 +163,6 @@ const connectPiano = () => {
 const disconnectPiano = () => {
   portIn.value.disconnect(filter.value)
   ascii.value.disconnect(filter.value)
-  ascii.value.close()
   piano.value.disconnect(filter.value)
   synthClear()
   piano.value.disconnect(portOut.value)
@@ -231,6 +230,7 @@ const changeOctave = (octave: number) => {
   currOctave.value = octave
 
   setPiano(midiChannel.value)
+  ascii.value.close()
   setAscii(midiChannel.value)
 
   connectPiano()
