@@ -210,10 +210,10 @@ const findCurrIndex = () => {
   // binary search
   let low = 0
   let high = props.parsedProgram.length - 1
+  let mid = 0
 
   while (low <= high) {
-    const mid = Math.floor((low + high) / 2)
-
+    mid = Math.floor((low + high) / 2)
     if (parseInt(props.parsedProgram[mid].timestamp) > position.value) {
       high = mid - 1
     } else if (parseInt(props.parsedProgram[mid].timestamp) < position.value) {
@@ -239,6 +239,7 @@ const findCurrIndex = () => {
       return
     }
   }
+  currIndexProgram.value = mid // case where it reaches only high branches and ends the while loop (when mid is 0 upon midi repeat)
 }
 
 const changePositionDebounce = (s: string) => {
@@ -254,6 +255,7 @@ watch(
   () => props.parsedProgram,
   () => {
     findCurrIndex()
+    getCurrParsedObj()
   }
 )
 
@@ -288,6 +290,10 @@ watch(
       case 'resume':
       case 'true':
         if (isSliderInput.value || newPosition < oldPosition) {
+          // while scrubbing make sure the position is equal to the newPosition before finding the current index
+          if (position.value !== newPosition) {
+            position.value = newPosition
+          }
           // if slider input or repeat loop
           findCurrIndex()
         } else if (
