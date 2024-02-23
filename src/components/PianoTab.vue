@@ -163,6 +163,7 @@ const connectPiano = () => {
 const disconnectPiano = () => {
   portIn.value.disconnect(filter.value)
   ascii.value.disconnect(filter.value)
+  ascii.value.close()
   piano.value.disconnect(filter.value)
   synthClear()
   piano.value.disconnect(portOut.value)
@@ -399,10 +400,8 @@ watch(
       () => {
         if (props.activeTab === 'piano') {
           enableKeypress()
-          window.addEventListener('keydown', keydownHandler)
         } else {
           disableKeypress()
-          window.removeEventListener('keydown', keydownHandler)
         }
       }
     )
