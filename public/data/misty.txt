@@ -72,7 +72,7 @@ F5-25BT7@132864[a6uge] # Eb7add13
 F5-27AT7@134708[a 5gy6aeg] # AbM9
 F5-27BT3@138264[uuuy] # Abm9
 F5-25BT5@140231[u yu] # Db7add13
-F5-20AT2@142169[g yu] # EbM7add11
+F5-20AT2@142069[g yu] # EbM7add11
 F5-35T3@143924[e fg] # Cm7add11
 F5-27BT0@145760[ya a] # Fm9
 F5-29AT2@147502[sef] # Bb7add11
